@@ -150,11 +150,39 @@ function generatePDF() {
     const poloCepInput = document.getElementById('poloCep');
     const emissionDateInput = document.getElementById('emissionDate');
 
-    if (!poloNameInput.value.trim()) {
-        alert("Por favor, preencha o Nome do Polo.");
-        poloNameInput.focus();
-        return;
+   if (!poloNameInput.value.trim()) {
+    alert("Por favor, preencha o Nome do Polo.");
+    poloNameInput.focus();
+    return;
+}
+
+if (!poloAddressInput.value.trim()) {
+    alert("Por favor, preencha o Endereço / Bairro.");
+    poloAddressInput.focus();
+    return;
+}
+
+if (!poloCepInput.value.trim()) {
+    alert("Por favor, preencha o CEP.");
+    poloCepInput.focus();
+    return;
+}
+// TRAVA: Impede gerar o PDF se houver imagem sem descrição
+for (const spaceMeta of spacesMasterList) {
+    const spaceData = state.spaces[spaceMeta.id];
+    const hasImages = spaceData.images.length > 0;
+    const hasDesc = spaceData.description.trim().length > 0;
+
+    if (hasImages && !hasDesc) {
+        alert(`O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`);
+        
+        // Coloca o foco no campo pendente
+        const textarea = document.getElementById(`desc-${spaceMeta.id}`);
+        if (textarea) textarea.focus();
+        
+        return; // <--- Interrompe e BARRA a geração do PDF aqui
     }
+}
 
     const templateContainer = document.getElementById('pdfTemplate');
     templateContainer.innerHTML = "";
@@ -274,7 +302,12 @@ function generatePDF() {
         pagebreak:    { mode: ['css', 'legacy'] }
     };
 
-    html2pdf().set(opt).from(element).save().catch(err => {
+ html2pdf().set(opt).from(element).save().then(() => {
+        // Recarrega a página automaticamente após gerar o PDF
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    }).catch(err => {
         console.error("Erro ao gerar PDF:", err);
         alert("Ocorreu um erro ao gerar o arquivo PDF.");
     });
