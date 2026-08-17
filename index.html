@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Memorial Descritivo - UniFECAF</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- html2pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Estilos do Modelo de Slides UniFECAF -->
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Estilo Exato dos Slides UniFECAF no PDF */
+        .slide-page {
+            width: 297mm;
+            height: 209.5mm; /* Previne quebra indesejada/página extra no final */
+            background-color: #191b3b; /* Tom escuro azul/roxo oficial */
+            color: #ffffff;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15mm 20mm;
+        }
+
+        /* Quebra de página APENAS se NÃO for o último slide */
+        .slide-page:not(:last-child) {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Capa */
+        .cover-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .cover-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .cover-subtitle {
+            font-size: 26pt;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 10px;
+            margin-bottom: 40px;
+        }
+
+        .cover-polo-info {
+            color: #ffffff;
+            font-size: 22pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1.5;
+            letter-spacing: 0.5px;
+        }
+
+        .top-right-logo-icon {
+            position: absolute;
+            top: 15mm;
+            right: 20mm;
+        }
+
+        /* Header dos Slides Internos */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        /* Pílula Verde do Titulo do Ambiente */
+        .slide-title-pill {
+            background-color: #00d285; /* Verde Teal da imagem */
+            color: #191b3b;
+            font-weight: 800;
+            font-size: 16pt;
+            padding: 8px 24px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .slide-brand-small {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Disposição em 2 Colunas: Fotos (Esquerda) x Especificações (Direita) */
+        .slide-body {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr; /* Ajuste sutil de proporção */
+            gap: 20px;
+            flex-grow: 1;
+            align-items: center;
+        }
+
+        .images-grid {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            height: 135mm;
+        }
+
+        /* Regra para 1 Imagem */
+        .images-grid.single-img { 
+            grid-template-columns: 1fr; 
+        }
+        .images-grid.single-img .img-card { 
+            height: 135mm; 
+        }
+
+        /* REGRAS PARA 2 IMAGENS: Empilhadas (Uma em cima da outra em formato paisagem) */
+        .images-grid.two-imgs { 
+            grid-template-columns: 1fr; 
+            grid-template-rows: 1fr 1fr; 
+        }
+        .images-grid.two-imgs .img-card { 
+            height: 64mm; 
+        }
+
+        /* Regras para 3 ou 4 Imagens (Grade 2x2) */
+        .images-grid:not(.single-img):not(.two-imgs) {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+        .images-grid:not(.single-img):not(.two-imgs) .img-card { 
+            height: 64mm; 
+        }
+
+        /* Estilo comum dos cartões de imagem */
+        .img-card {
+            width: 100%;
+            object-fit: cover; /* Ajusta proporcionalmente sem esticar nem achatar */
+            object-position: center;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.15);
+            background-color: #11132b;
+        }
+
+        .description-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #00d285;
+            border-radius: 0 12px 12px 0;
+            padding: 20px 25px;
+            height: 135mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .description-text {
+            color: #e2e8f0;
+            font-size: 13pt;
+            line-height: 1.6;
+        }
+
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
+            margin-top: 10px;
+            font-size: 9pt;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+
+    <!-- CABEÇALHO DO APP -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white py-5 shadow-lg">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center font-bold text-slate-950 text-xl">
+                    U
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-wide">Gerador de Memorial Descritivo - UniFECAF</h1>
+                    <p class="text-slate-400 text-xs">Layout de slides escuros conforme modelo oficial</p>
+                </div>
+            </div>
+            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-3 py-1 rounded-full font-mono">Modelo UniFECAF v2.0</span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        <form id="memorialForm" class="space-y-8" onsubmit="event.preventDefault();">
+            
+            <!-- SEÇÃO 1: DADOS DA CAPA -->
+            <section class="bg-slate-800/60 p-6 rounded-xl border border-slate-700 shadow-xl backdrop-blur">
+                <h2 class="text-lg font-bold text-emerald-400 mb-4 border-b border-slate-700 pb-3 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    1. Dados da Capa do Documento (Polo UniFECAF)
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div>
+                        <label for="poloName" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                            Nome do Polo <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="poloName" required placeholder="Ex: POLO POUSO ALEGRE" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label for="poloAddress" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                            Endereço / Bairro
+                        </label>
+                        <input type="text" id="poloAddress" placeholder="Ex: RUA SÃO PEDRO 115 - CENTRO" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label for="poloCep" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                            CEP
+                        </label>
+                        <input type="text" id="poloCep" placeholder="Ex: CEP. 37550-047" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label for="emissionDate" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Data de Emissão</label>
+                        <input type="date" id="emissionDate" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300 focus:outline-none">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 2: ESPAÇOS DA UNIDADE -->
+            <section class="bg-slate-800/60 p-6 rounded-xl border border-slate-700 shadow-xl backdrop-blur">
+                <div class="border-b border-slate-700 pb-3 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                            2. Mapeamento de Espaços e Infraestrutura
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Preencha Apenas os Ambientes que o seu Polo Possui.</p>
+                    </div>
+                </div>
+                
+                <div id="spacesContainer" class="space-y-6"></div>
+            </section>
+
+            <!-- AÇÃO DA APLICAÇÃO -->
+            <div class="flex justify-end gap-4 pt-2">
+                <button type="button" id="btnGeneratePDF" 
+                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm px-8 py-3.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Gerar PDF (Modelo Slides UniFECAF)
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- CONTAINER FORA DA TELA PARA RENDERIZAÇÃO DO PDF DA PAISAGEM -->
+    <div id="pdfContainer" style="position: absolute; left: -9999px; top: 0; width: 297mm;">
+        <div id="pdfTemplate"></div>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script src="script.js"></script>
+</body>
+</html>>
