@@ -167,20 +167,26 @@ if (!poloCepInput.value.trim()) {
     poloCepInput.focus();
     return;
 }
-// TRAVA: Impede gerar o PDF se houver imagem sem descrição
+// TRAVA: Impede gerar o PDF caso haja foto sem descrição OU descrição sem foto
 for (const spaceMeta of spacesMasterList) {
     const spaceData = state.spaces[spaceMeta.id];
     const hasImages = spaceData.images.length > 0;
     const hasDesc = spaceData.description.trim().length > 0;
 
+    // Foto anexada sem texto
     if (hasImages && !hasDesc) {
         alert(`O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`);
-        
-        // Coloca o foco no campo pendente
         const textarea = document.getElementById(`desc-${spaceMeta.id}`);
         if (textarea) textarea.focus();
-        
-        return; // <--- Interrompe e BARRA a geração do PDF aqui
+        return; // BARRA A GERAÇÃO
+    }
+
+    // Texto preenchido sem foto
+    if (hasDesc && !hasImages) {
+        alert(`O ambiente "${spaceMeta.title}" possui descrição, mas nenhuma foto foi anexada. Insira ao menos uma imagem para continuar.`);
+        const fileInput = document.getElementById(`file-${spaceMeta.id}`);
+        if (fileInput) fileInput.focus();
+        return; // BARRA A GERAÇÃO
     }
 }
 
