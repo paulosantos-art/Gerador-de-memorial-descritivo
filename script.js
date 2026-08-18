@@ -17,6 +17,15 @@ const spacesMasterList = [
 
 const state = { spaces: {} };
 
+// Garantir que a página sempre recarregue no topo
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
+window.onbeforeunload = function () {
+    window.scrollTo(0, 0);
+};
+
 // Logo Oficial (Centralizada)
 const UNIFECAF_LOGO_WHITE = `
 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
@@ -25,6 +34,8 @@ const UNIFECAF_LOGO_WHITE = `
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
+    window.scrollTo(0, 0);
+    
     spacesMasterList.forEach(space => {
         state.spaces[space.id] = { description: "", images: [] };
     });
@@ -372,7 +383,6 @@ function generatePDF() {
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        // Exibe o POP-UP de Sucesso e recarrega a página ao fechar
         Swal.fire({
             icon: 'success',
             title: 'Concluído com Sucesso!',
@@ -381,6 +391,7 @@ function generatePDF() {
             confirmButtonColor: '#17A460',
             customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
         }).then(() => {
+            window.scrollTo(0, 0);
             window.location.reload();
         });
     }).catch(err => {
