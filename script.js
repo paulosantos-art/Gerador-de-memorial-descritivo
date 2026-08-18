@@ -20,15 +20,11 @@ const state = { spaces: {} };
 // Logo Oficial (Centralizada)
 const UNIFECAF_LOGO_WHITE = `
 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-    <img src="logo-unifecaf.webp" alt="Logo UniFECAF" style="max-width: 320px; height: auto; display: block; margin: 0 auto;" />
+    <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" style="max-width: 320px; height: auto; display: block; margin: 0 auto;" />
 </div>
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
-    const today = new Date().toISOString().split('T')[0];
-    const emissionInput = document.getElementById('emissionDate');
-    if (emissionInput) emissionInput.value = today;
-
     spacesMasterList.forEach(space => {
         state.spaces[space.id] = { description: "", images: [] };
     });
@@ -39,6 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function renderFormSpaces() {
     const container = document.getElementById('spacesContainer');
+    if (!container) return;
+
     container.innerHTML = spacesMasterList.map(space => `
         <div class="p-6 border border-slate-200/90 rounded-xl bg-slate-50/40 hover:bg-slate-50/90 transition-all shadow-xs" id="card-${space.id}">
             <h3 class="font-bold text-brand-navy text-base mb-4 flex items-center justify-between">
@@ -120,6 +118,7 @@ function removeImage(spaceId, index) {
 
 function renderPreviews(spaceId) {
     const previewContainer = document.getElementById(`preview-${spaceId}`);
+    if (!previewContainer) return;
     const images = state.spaces[spaceId].images;
 
     previewContainer.innerHTML = images.map((imgSrc, index) => `
@@ -146,33 +145,23 @@ function applyConditionalValidation(spaceId) {
     }
 }
 
-// Função para rolar a tela e alinhar o campo pendente perfeitamente
 function focusElement(element) {
     if (!element) return;
 
     setTimeout(() => {
-        // Se o elemento estiver dentro da Seção 1 (Dados da Capa), rola até o topo total da página
-        const isCoverSection = element.closest('section') && element.closest('section').querySelector('h2').textContent.includes('Dados da Capa');
+        const isCoverSection = element.closest('section') && element.closest('section').querySelector('h2') && element.closest('section').querySelector('h2').textContent.includes('Dados da Capa');
 
         if (isCoverSection) {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            // Para os campos dos Cards de Ambientes (Seção 2)
             const targetElement = element.closest('.p-6') || element;
-            const headerOffset = 110; // Espaço reservado para o cabeçalho fixo
+            const headerOffset = 110;
             const elementPosition = targetElement.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
         }
 
-        // Aplica o foco diretamente no campo de texto
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
             element.focus({ preventScroll: true });
         }
@@ -184,7 +173,6 @@ function generatePDF() {
     const poloAddressInput = document.getElementById('poloAddress');
     const poloCepInput = document.getElementById('poloCep');
 
-    // 1. VALIDAÇÃO DOS CAMPOS DA CAPA (SWEETALERT2)
     if (!poloNameInput.value.trim()) {
         Swal.fire({
             icon: 'warning',
@@ -221,7 +209,6 @@ function generatePDF() {
         return;
     }
 
-    // 2. TRAVAS DE VALIDAÇÃO DOS ESPAÇOS (SWEETALERT2)
     for (const spaceMeta of spacesMasterList) {
         const spaceData = state.spaces[spaceMeta.id];
         const hasImages = spaceData.images.length > 0;
@@ -235,10 +222,7 @@ function generatePDF() {
                 confirmButtonText: 'Corrigir Agora',
                 confirmButtonColor: '#0E77CC',
                 customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
-            }).then(() => {
-                const textarea = document.getElementById(`desc-${spaceMeta.id}`);
-                focusElement(textarea);
-            });
+            }).then(() => focusElement(document.getElementById(`desc-${spaceMeta.id}`)));
             return;
         }
 
@@ -250,10 +234,7 @@ function generatePDF() {
                 confirmButtonText: 'Corrigir Agora',
                 confirmButtonColor: '#0E77CC',
                 customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
-            }).then(() => {
-                const fileInput = document.getElementById(`file-${spaceMeta.id}`);
-                focusElement(fileInput);
-            });
+            }).then(() => focusElement(document.getElementById(`file-${spaceMeta.id}`)));
             return;
         }
     }
@@ -263,7 +244,7 @@ function generatePDF() {
 
     let activeSpacesCount = 0;
 
-    // --- CAPA SEGUINDO O DESIGN CLEAN UNIFECAF ---
+    // --- CAPA SEGUINDO O DESIGN CLEAN UNIFECAF (SEM DATA DE EMISSÃO) ---
     const coverSlide = document.createElement('div');
     coverSlide.className = 'slide-page cover-slide';
     
@@ -271,7 +252,8 @@ function generatePDF() {
     const cep = poloCepInput.value.trim();
 
     coverSlide.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 0 20mm;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 190mm; text-align: center; padding: 0 20mm;">
+            
             <div style="margin-bottom: 12px; width: 100%;">
                 ${UNIFECAF_LOGO_WHITE}
             </div>
@@ -295,6 +277,7 @@ function generatePDF() {
                     </div>
                 ` : ''}
             </div>
+
         </div>
     `;
 
@@ -377,29 +360,19 @@ function generatePDF() {
         return;
     }
 
-    // Configuração e Geração do PDF com Limpeza Automática
     const element = document.getElementById('pdfTemplate');
 
     const opt = {
         margin:         0,
         filename:       `Memorial_Descritivo_UniFECAF_${poloNameInput.value.replace(/\s+/g, '_')}.pdf`,
         image:          { type: 'jpeg', quality: 0.98 },
-        html2canvas:    { 
-            scale: 2, 
-            useCORS: true, 
-            allowTaint: true,
-            logging: false, 
-            scrollX: 0, 
-            scrollY: 0 
-        },
+        html2canvas:    { scale: 2, useCORS: true, allowTaint: true, logging: false, scrollX: 0, scrollY: 0 },
         jsPDF:          { unit: 'mm', format: 'a4', orientation: 'landscape' },
         pagebreak:      { mode: ['css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+        setTimeout(() => { window.location.reload(); }, 1500);
     }).catch(err => {
         console.error("Erro ao gerar PDF:", err);
         Swal.fire({
