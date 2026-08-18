@@ -214,20 +214,22 @@
 </head>
 <body class="antialiased min-h-screen bg-slate-100 text-slate-900 font-sans">
 
-    <!-- CABEÇALHO SUPERIOR DESTACADO -->
-    <header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
-                <div>
-                    <h1 class="text-xl font-extrabold text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
-                 </div>
+  <!-- CABEÇALHO SUPERIOR DESTACADO -->
+<header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
+            <div>
+                <!-- Aumentado de text-xl para text-3xl -->
+                <h1 class="text-3xl font-black text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
             </div>
-            <span class="text-xs font-bold px-3.5 py-1.5 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
-                Sistema Interno
-            </span>
         </div>
-    </header>
+        <!-- Aumentado de text-xs para text-sm com mais preenchimento -->
+        <span class="text-sm font-extrabold px-4 py-2 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
+            Sistema Interno
+        </span>
+    </div>
+</header>
 
     <main class="max-w-6xl mx-auto px-6 py-8">
         <form id="memorialForm" class="space-y-8" onsubmit="event.preventDefault();">
