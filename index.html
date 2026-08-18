@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="light" style="color-scheme: light;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
     <title>Gerador de Memorial Descritivo - UniFECAF</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class', // Desativa o dark mode automático do navegador/sistema
             theme: {
                 extend: {
                     colors: {
@@ -30,11 +32,22 @@
     <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Estilos do Modelo de Slides UniFECAF (NOVO DESIGN CLEAN DO PDF) -->
+    <!-- Estilos Fixos Light Mode + Modelo de Slides UniFECAF -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        .slide-page {
+        /* FORÇAR MODO CLARO GLOBALMENTE */
+        :root {
+            color-scheme: light !important;
+        }
+
+        body {
+            background-color: #f1f5f9 !important;
+            color: #191919 !important;
+        }
+
+        /* ESTILOS ISOLADOS APENAS PARA OS SLIDES DO PDF */
+        #pdfTemplate .slide-page {
             width: 297mm;
             height: 209.5mm;
             background-color: #f8fafc;
@@ -49,13 +62,13 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        .slide-page:not(:last-child) {
+        #pdfTemplate .slide-page:not(:last-child) {
             page-break-after: always;
             break-after: page;
         }
 
-        /* CAPA CLEAN & ELEGANTE */
-        .cover-slide {
+        /* CAPA CLEAN & ELEGANTE DO PDF */
+        #pdfTemplate .cover-slide {
             background: linear-gradient(135deg, #0E77CC 0%, #1A3666 100%);
             color: #ffffff;
             justify-content: center;
@@ -64,68 +77,8 @@
             padding: 25mm;
         }
 
-        .cover-badge {
-            background-color: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-            font-size: 11pt;
-            font-weight: 700;
-            padding: 6px 18px;
-            border-radius: 50px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 25px;
-            display: inline-block;
-        }
-
-        .cover-title {
-            font-size: 34pt;
-            font-weight: 900;
-            letter-spacing: -1px;
-            line-height: 1.1;
-            margin-bottom: 12px;
-            color: #ffffff;
-        }
-
-        .cover-subtitle {
-            font-size: 18pt;
-            font-weight: 600;
-            color: #93c5fd;
-            margin-bottom: 45px;
-        }
-
-        .cover-meta-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            width: 100%;
-            max-width: 240mm;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 20px 25px;
-            text-align: left;
-        }
-
-        .cover-meta-item label {
-            display: block;
-            font-size: 8pt;
-            font-weight: 700;
-            color: #93c5fd;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 4px;
-        }
-
-        .cover-meta-item span {
-            font-size: 12pt;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        /* CABEÇALHO DO SLIDE EM AZUL ESCURO (#1A3666) */
-        .slide-header {
+        /* CABEÇALHO DO SLIDE DO PDF */
+        #pdfTemplate .slide-header {
             background-color: #1A3666;
             border-radius: 12px;
             padding: 12px 20px;
@@ -136,13 +89,13 @@
             margin-bottom: 15px;
         }
 
-        .slide-header-left {
+        #pdfTemplate .slide-header-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .header-dot {
+        #pdfTemplate .header-dot {
             width: 12px;
             height: 12px;
             background-color: #17A460;
@@ -150,14 +103,14 @@
             display: inline-block;
         }
 
-        .slide-title-pill {
+        #pdfTemplate .slide-title-pill {
             color: #ffffff;
             font-weight: 800;
             font-size: 15pt;
             letter-spacing: -0.3px;
         }
 
-        .slide-brand-tag {
+        #pdfTemplate .slide-brand-tag {
             color: #93c5fd;
             font-size: 9pt;
             font-weight: 700;
@@ -165,8 +118,8 @@
             letter-spacing: 1px;
         }
 
-        /* CORPO E GRID */
-        .slide-body {
+        /* CORPO E GRID DO PDF */
+        #pdfTemplate .slide-body {
             display: grid;
             grid-template-columns: 1.15fr 0.85fr;
             gap: 18px;
@@ -174,26 +127,26 @@
             align-items: stretch;
         }
 
-        .images-grid {
+        #pdfTemplate .images-grid {
             display: grid;
             gap: 10px;
             width: 100%;
             height: 138mm;
         }
 
-        .images-grid.single-img { grid-template-columns: 1fr; }
-        .images-grid.single-img .img-card { height: 138mm; }
+        #pdfTemplate .images-grid.single-img { grid-template-columns: 1fr; }
+        #pdfTemplate .images-grid.single-img .img-card { height: 138mm; }
 
-        .images-grid.two-imgs { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-        .images-grid.two-imgs .img-card { height: 66mm; }
+        #pdfTemplate .images-grid.two-imgs { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        #pdfTemplate .images-grid.two-imgs .img-card { height: 66mm; }
 
-        .images-grid:not(.single-img):not(.two-imgs) {
+        #pdfTemplate .images-grid:not(.single-img):not(.two-imgs) {
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
         }
-        .images-grid:not(.single-img):not(.two-imgs) .img-card { height: 66mm; }
+        #pdfTemplate .images-grid:not(.single-img):not(.two-imgs) .img-card { height: 66mm; }
 
-        .img-card {
+        #pdfTemplate .img-card {
             width: 100%;
             object-fit: cover;
             object-position: center;
@@ -203,8 +156,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
-        /* CARD DE DESCRIÇÃO BRANCO COM BORDA VERDE */
-        .description-box {
+        /* CARD DE DESCRIÇÃO DO PDF */
+        #pdfTemplate .description-box {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
             border-left: 5px solid #17A460;
@@ -217,7 +170,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
         }
 
-        .description-box-title {
+        #pdfTemplate .description-box-title {
             font-size: 9pt;
             font-weight: 800;
             color: #0E77CC;
@@ -228,7 +181,7 @@
             border-bottom: 1px solid #f1f5f9;
         }
 
-        .description-text {
+        #pdfTemplate .description-text {
             color: #191919;
             font-size: 11pt;
             line-height: 1.6;
@@ -237,8 +190,8 @@
             overflow-y: auto;
         }
 
-        /* RODAPÉ CLEAN */
-        .slide-footer {
+        /* RODAPÉ DO PDF */
+        #pdfTemplate .slide-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -250,15 +203,15 @@
             font-weight: 600;
         }
 
-        .slide-footer .logo-text {
+        #pdfTemplate .slide-footer .logo-text {
             color: #1A3666;
             font-weight: 800;
         }
     </style>
 </head>
-<body class="antialiased min-h-screen bg-slate-100 text-brand-dark font-sans">
+<body class="antialiased min-h-screen bg-slate-100 text-slate-900 font-sans">
 
-    <!-- CABEÇALHO SUPERIOR DESTACADO (AZUL VIBRANTE UNIFECAF) -->
+    <!-- CABEÇALHO SUPERIOR DESTACADO -->
     <header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
             <div class="flex items-center gap-3.5">
@@ -294,26 +247,26 @@
                             Nome do Polo <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="poloName" required placeholder="Ex: POLO POUSO ALEGRE" 
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-brand-dark placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
                     </div>
                     <div>
                         <label for="poloAddress" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
                             Endereço / Bairro
                         </label>
                         <input type="text" id="poloAddress" placeholder="Ex: RUA SÃO PEDRO 115 - CENTRO" 
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-brand-dark placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
                     </div>
                     <div>
                         <label for="poloCep" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
                             CEP
                         </label>
                         <input type="text" id="poloCep" placeholder="Ex: CEP. 37550-047" 
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-brand-dark placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
                     </div>
                     <div>
                         <label for="emissionDate" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Data de Emissão</label>
                         <input type="date" id="emissionDate" 
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-brand-dark focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
                     </div>
                 </div>
             </section>
