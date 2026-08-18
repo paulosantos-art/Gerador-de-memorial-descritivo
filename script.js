@@ -87,7 +87,14 @@ function handleFileUpload(spaceId, input) {
     const currentImages = state.spaces[spaceId].images;
 
     if (currentImages.length + files.length > 4) {
-        alert("Você só pode anexar até 4 fotos por ambiente.");
+        Swal.fire({
+            icon: 'warning',
+            title: 'Limite Excedido',
+            text: 'Você só pode anexar até 4 fotos por ambiente.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0E77CC',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        });
         input.value = "";
         return;
     }
@@ -139,47 +146,88 @@ function applyConditionalValidation(spaceId) {
     }
 }
 
+// Função utilitária para focar e rolar até o elemento com erro
+function focusElement(element) {
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.focus();
+}
+
 function generatePDF() {
     const poloNameInput = document.getElementById('poloName');
     const poloAddressInput = document.getElementById('poloAddress');
     const poloCepInput = document.getElementById('poloCep');
 
-    // 1. VALIDAÇÃO DOS CAMPOS DA CAPA
+    // 1. VALIDAÇÃO DOS CAMPOS DA CAPA (SWEETALERT2)
     if (!poloNameInput.value.trim()) {
-        alert("Por favor, preencha o Nome do Polo.");
-        poloNameInput.focus();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo Obrigatório',
+            text: 'Por favor, preencha o Nome do Polo.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0E77CC',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        }).then(() => focusElement(poloNameInput));
         return;
     }
 
     if (!poloAddressInput.value.trim()) {
-        alert("Por favor, preencha o Endereço / Bairro.");
-        poloAddressInput.focus();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo Obrigatório',
+            text: 'Por favor, preencha o Endereço / Bairro.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0E77CC',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        }).then(() => focusElement(poloAddressInput));
         return;
     }
 
     if (!poloCepInput.value.trim()) {
-        alert("Por favor, preencha o CEP.");
-        poloCepInput.focus();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo Obrigatório',
+            text: 'Por favor, preencha o CEP.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0E77CC',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        }).then(() => focusElement(poloCepInput));
         return;
     }
 
-    // 2. TRAVAS DE VALIDAÇÃO DOS ESPAÇOS
+    // 2. TRAVAS DE VALIDAÇÃO DOS ESPAÇOS (SWEETALERT2)
     for (const spaceMeta of spacesMasterList) {
         const spaceData = state.spaces[spaceMeta.id];
         const hasImages = spaceData.images.length > 0;
         const hasDesc = spaceData.description.trim().length > 0;
 
         if (hasImages && !hasDesc) {
-            alert(`O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`);
-            const textarea = document.getElementById(`desc-${spaceMeta.id}`);
-            if (textarea) textarea.focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Descrição Ausente',
+                text: `O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`,
+                confirmButtonText: 'Corrigir Agora',
+                confirmButtonColor: '#0E77CC',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+            }).then(() => {
+                const textarea = document.getElementById(`desc-${spaceMeta.id}`);
+                focusElement(textarea);
+            });
             return;
         }
 
         if (hasDesc && !hasImages) {
-            alert(`O ambiente "${spaceMeta.title}" possui descrição, mas nenhuma foto foi anexada. Insira ao menos uma imagem para continuar.`);
-            const fileInput = document.getElementById(`file-${spaceMeta.id}`);
-            if (fileInput) fileInput.focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Foto Ausente',
+                text: `O ambiente "${spaceMeta.title}" possui descrição, mas nenhuma foto foi anexada. Insira ao menos uma imagem para continuar.`,
+                confirmButtonText: 'Corrigir Agora',
+                confirmButtonColor: '#0E77CC',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+            }).then(() => {
+                const fileInput = document.getElementById(`file-${spaceMeta.id}`);
+                focusElement(fileInput);
+            });
             return;
         }
     }
@@ -292,7 +340,14 @@ function generatePDF() {
     });
 
     if (activeSpacesCount === 0) {
-        alert("Preencha a descrição ou insira imagens em ao menos um ambiente para gerar o PDF.");
+        Swal.fire({
+            icon: 'info',
+            title: 'Formulário Vazio',
+            text: 'Preencha a descrição ou insira imagens em ao menos um ambiente para gerar o PDF.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0E77CC',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        });
         return;
     }
 
@@ -316,12 +371,18 @@ function generatePDF() {
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        // Aguarda 1.5 segundos após o início do download e recarrega a página zerando os campos
         setTimeout(() => {
             window.location.reload();
         }, 1500);
     }).catch(err => {
         console.error("Erro ao gerar PDF:", err);
-        alert("Ocorreu um erro ao gerar o arquivo PDF.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro na Geração',
+            text: 'Ocorreu um erro ao gerar o arquivo PDF.',
+            confirmButtonText: 'Fechar',
+            confirmButtonColor: '#e11d48',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        });
     });
 }
