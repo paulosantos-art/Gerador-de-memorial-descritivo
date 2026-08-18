@@ -296,19 +296,31 @@ function generatePDF() {
         return;
     }
 
-    // Configuração e Geração do PDF
+    // Configuração e Geração do PDF com Limpeza Automática
     const element = document.getElementById('pdfTemplate');
 
     const opt = {
         margin:         0,
         filename:       `Memorial_Descritivo_UniFECAF_${poloNameInput.value.replace(/\s+/g, '_')}.pdf`,
         image:          { type: 'jpeg', quality: 0.98 },
-        html2canvas:    { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        html2canvas:    { 
+            scale: 2, 
+            useCORS: true, 
+            allowTaint: true,
+            logging: false, 
+            scrollX: 0, 
+            scrollY: 0 
+        },
         jsPDF:          { unit: 'mm', format: 'a4', orientation: 'landscape' },
         pagebreak:      { mode: ['css', 'legacy'] }
     };
 
-    html2pdf().set(opt).from(element).save().catch(err => {
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Aguarda 1.5 segundos após o início do download e recarrega a página zerando os campos
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    }).catch(err => {
         console.error("Erro ao gerar PDF:", err);
         alert("Ocorreu um erro ao gerar o arquivo PDF.");
     });
