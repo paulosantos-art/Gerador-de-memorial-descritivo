@@ -214,28 +214,26 @@
 </head>
 <body class="antialiased min-h-screen bg-slate-100 text-slate-900 font-sans">
 
-  <!-- CABEÇALHO SUPERIOR DESTACADO -->
-<header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
-            <div>
-                <!-- Aumentado de text-xl para text-3xl -->
-                <h1 class="text-3xl font-black text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
+    <!-- CABEÇALHO SUPERIOR DESTACADO -->
+    <header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
+                <div>
+                    <h1 class="text-3xl font-black text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
+                </div>
             </div>
+            <span class="text-sm font-extrabold px-4 py-2 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
+                Sistema Interno
+            </span>
         </div>
-        <!-- Aumentado de text-xs para text-sm com mais preenchimento -->
-        <span class="text-sm font-extrabold px-4 py-2 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
-            Sistema Interno
-        </span>
-    </div>
-</header>
+    </header>
 
     <main class="max-w-6xl mx-auto px-6 py-8">
         <form id="memorialForm" class="space-y-8" onsubmit="event.preventDefault();">
             
             <!-- SEÇÃO 1: DADOS DA CAPA -->
-            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <section id="section-capa" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="bg-brand-navy p-5 text-white">
                     <h2 class="text-base font-bold flex items-center gap-2.5">
                         <span class="w-3 h-3 rounded-full bg-brand-green"></span>
@@ -243,7 +241,7 @@
                     </h2>
                 </div>
                 
-                <div class="p-7 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="p-7 grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
                         <label for="poloName" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
                             Nome do Polo <span class="text-rose-500">*</span>
@@ -264,11 +262,6 @@
                         </label>
                         <input type="text" id="poloCep" placeholder="Ex: CEP. 37550-047" 
                             class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
-                    </div>
-                    <div>
-                        <label for="emissionDate" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Data de Emissão</label>
-                        <input type="date" id="emissionDate" 
-                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
                     </div>
                 </div>
             </section>
