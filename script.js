@@ -1,5 +1,5 @@
 /**
- * Gerador de Memorial Descritivo - Modelo UniFECAF (Landscape Slides)
+ * Gerador de Memorial Descritivo - Modelo UniFECAF (Landscape Slides Clean)
  */
 
 const spacesMasterList = [
@@ -17,21 +17,11 @@ const spacesMasterList = [
 
 const state = { spaces: {} };
 
+// Logo Oficial (Centralizada)
 const UNIFECAF_LOGO_WHITE = `
-<div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-    <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="80" height="80" rx="15" stroke="white" stroke-width="12" fill="none"/>
-        <rect x="35" y="35" width="30" height="30" fill="white"/>
-    </svg>
-    <span style="font-family: Arial, sans-serif; font-weight: 900; font-size: 42pt; color: white; letter-spacing: -1px;">UniFECAF</span>
+<div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+    <img src="logo-unifecaf.webp" alt="Logo UniFECAF" style="max-width: 320px; height: auto; display: block; margin: 0 auto;" />
 </div>
-`;
-
-const UNIFECAF_ICON_TEAL = `
-<svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="10" width="80" height="80" rx="12" stroke="#00d285" stroke-width="12" fill="none"/>
-    <rect x="35" y="35" width="30" height="30" fill="#00d285"/>
-</svg>
 `;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -50,14 +40,19 @@ document.addEventListener("DOMContentLoaded", () => {
 function renderFormSpaces() {
     const container = document.getElementById('spacesContainer');
     container.innerHTML = spacesMasterList.map(space => `
-        <div class="p-5 border border-slate-700 rounded-xl bg-slate-900/60 shadow-md" id="card-${space.id}">
-            <h3 class="font-bold text-white text-base mb-4 flex items-center justify-between">
-                <span class="text-emerald-400 font-semibold">${space.title}</span>
-                <span id="badge-${space.id}" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full hidden">Descrição Obrigatória</span>
+        <div class="p-6 border border-slate-200/90 rounded-xl bg-slate-50/40 hover:bg-slate-50/90 transition-all shadow-xs" id="card-${space.id}">
+            <h3 class="font-bold text-brand-navy text-base mb-4 flex items-center justify-between">
+                <span class="text-brand-navy font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-blue"></span>
+                    ${space.title}
+                </span>
+                <span id="badge-${space.id}" class="text-xs bg-amber-50 text-amber-800 border border-amber-300/80 px-3 py-1 rounded-full font-bold hidden">
+                    Descrição Obrigatória
+                </span>
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
                         Descrição / Inventário de Itens (Tópicos)
                     </label>
                     <textarea 
@@ -65,11 +60,11 @@ function renderFormSpaces() {
                         rows="5" 
                         placeholder="Ex: - 20 computadores Dell Core i5&#10;- Ar condicionado 24.000 BTUs&#10;- Botoeira de emergência e PWD"
                         oninput="updateDescription('${space.id}', this.value)"
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none font-mono"
+                        class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-brand-dark focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 focus:outline-none transition-all font-mono leading-relaxed"
                     ></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
                         Fotos do Espaço (Até 4 imagens)
                     </label>
                     <input 
@@ -78,9 +73,9 @@ function renderFormSpaces() {
                         accept="image/jpeg, image/png" 
                         multiple 
                         onchange="handleFileUpload('${space.id}', this)"
-                        class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 mb-3 cursor-pointer"
+                        class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-brand-blue hover:file:bg-blue-100 transition-all mb-3 cursor-pointer"
                     />
-                    <div id="preview-${space.id}" class="grid grid-cols-4 gap-2"></div>
+                    <div id="preview-${space.id}" class="grid grid-cols-4 gap-2.5"></div>
                 </div>
             </div>
         </div>
@@ -121,10 +116,10 @@ function renderPreviews(spaceId) {
     const images = state.spaces[spaceId].images;
 
     previewContainer.innerHTML = images.map((imgSrc, index) => `
-        <div class="relative group aspect-square border border-slate-700 rounded-lg bg-slate-950 overflow-hidden">
+        <div class="relative group aspect-square border border-slate-200 rounded-lg bg-slate-100 overflow-hidden shadow-xs">
             <img src="${imgSrc}" class="w-full h-full object-cover">
             <button type="button" onclick="removeImage('${spaceId}', ${index})" 
-                class="absolute top-0 right-0 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center font-bold hover:bg-red-700 transition">
+                class="absolute top-1 right-1 bg-rose-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hover:bg-rose-700 transition shadow-sm">
                 &times;
             </button>
         </div>
@@ -148,54 +143,53 @@ function generatePDF() {
     const poloNameInput = document.getElementById('poloName');
     const poloAddressInput = document.getElementById('poloAddress');
     const poloCepInput = document.getElementById('poloCep');
-    const emissionDateInput = document.getElementById('emissionDate');
 
-   if (!poloNameInput.value.trim()) {
-    alert("Por favor, preencha o Nome do Polo.");
-    poloNameInput.focus();
-    return;
-}
-
-if (!poloAddressInput.value.trim()) {
-    alert("Por favor, preencha o Endereço / Bairro.");
-    poloAddressInput.focus();
-    return;
-}
-
-if (!poloCepInput.value.trim()) {
-    alert("Por favor, preencha o CEP.");
-    poloCepInput.focus();
-    return;
-}
-// TRAVA: Impede gerar o PDF caso haja foto sem descrição OU descrição sem foto
-for (const spaceMeta of spacesMasterList) {
-    const spaceData = state.spaces[spaceMeta.id];
-    const hasImages = spaceData.images.length > 0;
-    const hasDesc = spaceData.description.trim().length > 0;
-
-    // Foto anexada sem texto
-    if (hasImages && !hasDesc) {
-        alert(`O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`);
-        const textarea = document.getElementById(`desc-${spaceMeta.id}`);
-        if (textarea) textarea.focus();
-        return; // BARRA A GERAÇÃO
+    // 1. VALIDAÇÃO DOS CAMPOS DA CAPA
+    if (!poloNameInput.value.trim()) {
+        alert("Por favor, preencha o Nome do Polo.");
+        poloNameInput.focus();
+        return;
     }
 
-    // Texto preenchido sem foto
-    if (hasDesc && !hasImages) {
-        alert(`O ambiente "${spaceMeta.title}" possui descrição, mas nenhuma foto foi anexada. Insira ao menos uma imagem para continuar.`);
-        const fileInput = document.getElementById(`file-${spaceMeta.id}`);
-        if (fileInput) fileInput.focus();
-        return; // BARRA A GERAÇÃO
+    if (!poloAddressInput.value.trim()) {
+        alert("Por favor, preencha o Endereço / Bairro.");
+        poloAddressInput.focus();
+        return;
     }
-}
+
+    if (!poloCepInput.value.trim()) {
+        alert("Por favor, preencha o CEP.");
+        poloCepInput.focus();
+        return;
+    }
+
+    // 2. TRAVAS DE VALIDAÇÃO DOS ESPAÇOS
+    for (const spaceMeta of spacesMasterList) {
+        const spaceData = state.spaces[spaceMeta.id];
+        const hasImages = spaceData.images.length > 0;
+        const hasDesc = spaceData.description.trim().length > 0;
+
+        if (hasImages && !hasDesc) {
+            alert(`O ambiente "${spaceMeta.title}" possui foto(s) anexada(s), mas a descrição está em branco. Preencha a descrição para continuar.`);
+            const textarea = document.getElementById(`desc-${spaceMeta.id}`);
+            if (textarea) textarea.focus();
+            return;
+        }
+
+        if (hasDesc && !hasImages) {
+            alert(`O ambiente "${spaceMeta.title}" possui descrição, mas nenhuma foto foi anexada. Insira ao menos uma imagem para continuar.`);
+            const fileInput = document.getElementById(`file-${spaceMeta.id}`);
+            if (fileInput) fileInput.focus();
+            return;
+        }
+    }
 
     const templateContainer = document.getElementById('pdfTemplate');
     templateContainer.innerHTML = "";
 
     let activeSpacesCount = 0;
 
-    // --- CAPA IGUAL AO SLIDE 1 ---
+    // --- CAPA SEGUINDO O DESIGN CLEAN UNIFECAF ---
     const coverSlide = document.createElement('div');
     coverSlide.className = 'slide-page cover-slide';
     
@@ -203,24 +197,30 @@ for (const spaceMeta of spacesMasterList) {
     const cep = poloCepInput.value.trim();
 
     coverSlide.innerHTML = `
-        <div class="top-right-logo-icon">
-            ${UNIFECAF_ICON_TEAL}
-        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 0 20mm;">
+            <div style="margin-bottom: 12px; width: 100%;">
+                ${UNIFECAF_LOGO_WHITE}
+            </div>
 
-        <div class="cover-logo-container">
-            ${UNIFECAF_LOGO_WHITE}
-            <div class="cover-subtitle">Memorial descritivo</div>
-        </div>
+            <div style="font-size: 18pt; font-weight: 700; color: #ffffff; margin-bottom: 50px; letter-spacing: -0.2px;">
+                Memorial Descritivo de Infraestrutura
+            </div>
 
-        <div class="cover-polo-info">
-            <div>${poloNameInput.value.toUpperCase()}</div>
-            ${address ? `<div>${address.toUpperCase()}</div>` : ''}
-            ${cep ? `<div>${cep.toUpperCase()}</div>` : ''}
-        </div>
-
-        <div class="slide-footer" style="position: absolute; bottom: 15mm; left: 20mm; right: 20mm;">
-            <span>UniFECAF - Centro Universitário</span>
-            <span>Emissão: ${emissionDateInput.value || 'Data não informada'}</span>
+            <div style="display: flex; flex-direction: column; gap: 6px; color: #ffffff; text-align: center;">
+                <div style="font-size: 16pt; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
+                    ${poloNameInput.value.trim()}
+                </div>
+                ${address ? `
+                    <div style="font-size: 12pt; font-weight: 600; text-transform: uppercase; opacity: 0.95;">
+                        ${address}
+                    </div>
+                ` : ''}
+                ${cep ? `
+                    <div style="font-size: 11pt; font-weight: 600; text-transform: uppercase; opacity: 0.85; margin-top: 2px;">
+                        CEP: ${cep}
+                    </div>
+                ` : ''}
+            </div>
         </div>
     `;
 
@@ -243,11 +243,11 @@ for (const spaceMeta of spacesMasterList) {
                 const lines = formattedText.split('\n');
                 formattedText = lines.map(line => {
                     const cleanLine = line.replace(/^[-•]\s*/, '').trim();
-                    return cleanLine ? `<li style="margin-bottom:6px;"><span style="color:#ffffff;">${cleanLine}</span></li>` : '';
+                    return cleanLine ? `<li style="margin-bottom:8px;"><span style="color:#191919;">${cleanLine}</span></li>` : '';
                 }).join('');
-                formattedText = `<ul style="padding-left: 18px; list-style-type: square; color:#00d285;">${formattedText}</ul>`;
+                formattedText = `<ul style="padding-left: 18px; list-style-type: square; color:#17A460;">${formattedText}</ul>`;
             } else {
-                formattedText = `<p style="color:#e2e8f0; font-size:13pt; line-height:1.6; white-space:pre-line;">${spaceData.description}</p>`;
+                formattedText = `<p style="color:#191919; font-size:11pt; line-height:1.6; white-space:pre-line;">${spaceData.description}</p>`;
             }
 
             let gridClass = "images-grid";
@@ -258,21 +258,21 @@ for (const spaceMeta of spacesMasterList) {
                 <div class="${gridClass}">
                     ${spaceData.images.map(img => `<img src="${img}" class="img-card" />`).join('')}
                 </div>
-            ` : `<div class="images-grid"><div style="height:135mm; background:rgba(255,255,255,0.02); border-radius:8px; border:1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.4);">Sem fotos anexadas</div></div>`;
+            ` : `<div class="images-grid"><div style="height:138mm; background:#ffffff; border-radius:10px; border:2px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; color:#64748b; font-weight:600; font-size:10pt;">Sem fotos anexadas</div></div>`;
 
             slide.innerHTML = `
                 <div class="slide-header">
-                    <div class="slide-title-pill">${spaceMeta.title}</div>
-                    <div class="slide-brand-small">
-                        ${UNIFECAF_ICON_TEAL}
-                        <span>UniFECAF</span>
+                    <div class="slide-header-left">
+                        <span class="header-dot"></span>
+                        <div class="slide-title-pill">${spaceMeta.title}</div>
                     </div>
+                    <span class="slide-brand-tag">UniFECAF</span>
                 </div>
 
                 <div class="slide-body">
                     ${imagesHTML}
                     <div class="description-box">
-                        <div style="font-size: 11pt; text-transform: uppercase; color: #00d285; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px;">
+                        <div class="description-box-title">
                             Especificações & Equipamentos
                         </div>
                         <div class="description-text">
@@ -283,7 +283,7 @@ for (const spaceMeta of spacesMasterList) {
 
                 <div class="slide-footer">
                     <span>Memorial Descritivo de Infraestrutura</span>
-                    <span>${poloNameInput.value.toUpperCase()}</span>
+                    <span class="logo-text">${poloNameInput.value.toUpperCase()}</span>
                 </div>
             `;
 
@@ -296,24 +296,19 @@ for (const spaceMeta of spacesMasterList) {
         return;
     }
 
-    // Configuração do PDF para Orientação Paisagem (Landscape / Slides)
+    // Configuração e Geração do PDF
     const element = document.getElementById('pdfTemplate');
 
     const opt = {
-        margin:       0,
-        filename:     `Memorial_Descritivo_UniFECAF_${poloNameInput.value.replace(/\s+/g, '_')}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        margin:         0,
+        filename:       `Memorial_Descritivo_UniFECAF_${poloNameInput.value.replace(/\s+/g, '_')}.pdf`,
+        image:          { type: 'jpeg', quality: 0.98 },
+        html2canvas:    { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        jsPDF:          { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak:      { mode: ['css', 'legacy'] }
     };
 
- html2pdf().set(opt).from(element).save().then(() => {
-        // Recarrega a página automaticamente após gerar o PDF
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    }).catch(err => {
+    html2pdf().set(opt).from(element).save().catch(err => {
         console.error("Erro ao gerar PDF:", err);
         alert("Ocorreu um erro ao gerar o arquivo PDF.");
     });
