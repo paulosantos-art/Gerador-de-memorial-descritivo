@@ -146,11 +146,37 @@ function applyConditionalValidation(spaceId) {
     }
 }
 
-// Função utilitária para focar e rolar até o elemento com erro
+// Função para rolar a tela e alinhar o campo pendente perfeitamente
 function focusElement(element) {
     if (!element) return;
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    element.focus();
+
+    setTimeout(() => {
+        // Se o elemento estiver dentro da Seção 1 (Dados da Capa), rola até o topo total da página
+        const isCoverSection = element.closest('section') && element.closest('section').querySelector('h2').textContent.includes('Dados da Capa');
+
+        if (isCoverSection) {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        } else {
+            // Para os campos dos Cards de Ambientes (Seção 2)
+            const targetElement = element.closest('.p-6') || element;
+            const headerOffset = 110; // Espaço reservado para o cabeçalho fixo
+            const elementPosition = targetElement.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        // Aplica o foco diretamente no campo de texto
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+            element.focus({ preventScroll: true });
+        }
+    }, 250);
 }
 
 function generatePDF() {
