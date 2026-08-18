@@ -244,7 +244,7 @@ function generatePDF() {
 
     let activeSpacesCount = 0;
 
-    // --- CAPA SEGUINDO O DESIGN CLEAN UNIFECAF (SEM DATA DE EMISSÃO) ---
+    // --- CAPA SEGUINDO O DESIGN CLEAN UNIFECAF ---
     const coverSlide = document.createElement('div');
     coverSlide.className = 'slide-page cover-slide';
     
@@ -372,7 +372,17 @@ function generatePDF() {
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        setTimeout(() => { window.location.reload(); }, 1500);
+        // Exibe o POP-UP de Sucesso e recarrega a página ao fechar
+        Swal.fire({
+            icon: 'success',
+            title: 'Concluído com Sucesso!',
+            text: 'O Memorial Descritivo foi gerado e o download iniciado.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#17A460',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        }).then(() => {
+            window.location.reload();
+        });
     }).catch(err => {
         console.error("Erro ao gerar PDF:", err);
         Swal.fire({
