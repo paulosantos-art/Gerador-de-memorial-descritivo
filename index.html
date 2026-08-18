@@ -10,7 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Desativa o dark mode automático do navegador/sistema
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -28,6 +28,9 @@
             }
         }
     </script>
+
+    <!-- SweetAlert2 CDN (Adicionado para os alertas funcionarem) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -212,19 +215,19 @@
 <body class="antialiased min-h-screen bg-slate-100 text-slate-900 font-sans">
 
     <!-- CABEÇALHO SUPERIOR DESTACADO -->
-<header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
-            <div>
-                <h1 class="text-xl font-extrabold text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
-             </div>
+    <header class="bg-brand-blue border-b border-brand-navy/20 py-5 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-20 h-20 object-contain drop-shadow-sm">
+                <div>
+                    <h1 class="text-xl font-extrabold text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
+                 </div>
+            </div>
+            <span class="text-xs font-bold px-3.5 py-1.5 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
+                Sistema Interno
+            </span>
         </div>
-        <span class="text-xs font-bold px-3.5 py-1.5 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
-            Sistema Interno
-        </span>
-    </div>
-</header>
+    </header>
 
     <main class="max-w-6xl mx-auto px-6 py-8">
         <form id="memorialForm" class="space-y-8" onsubmit="event.preventDefault();">
