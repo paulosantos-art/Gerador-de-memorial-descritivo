@@ -40,10 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
         state.spaces[space.id] = { description: "", images: [] };
     });
 
+    loadPolosFromGoogleSheets(); // <-- ADICIONE APENAS ESTA LINHA AQUI
+
     renderFormSpaces();
     document.getElementById('btnGeneratePDF').addEventListener('click', generatePDF);
 });
-
 function renderFormSpaces() {
     const container = document.getElementById('spacesContainer');
     if (!container) return;
@@ -403,6 +404,128 @@ function generatePDF() {
             confirmButtonText: 'Fechar',
             confirmButtonColor: '#e11d48',
             customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-sm' }
+        });
+    });
+    
+}
+async function loadPolosFromGoogleSheets() {
+    const SHEET_ID = '1fVH0Yc4Zo6PKcwEpWSgSbAPnSVLXqgaahj9i3HdK92c';
+    const GID = '1722842106'; // ID da aba regulatorio 2
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+
+    const poloSelect = document.getElementById('poloName');
+    if (!poloSelect) return;
+
+    try {
+        poloSelect.innerHTML = `<option value="" disabled selected>Carregando polos...</option>`;
+
+        const response = await fetch(csvUrl);
+        const data = await response.text();
+
+        // Divide por linhas e limpa aspas
+        const rows = data.split('\n').map(row => row.split(','));
+
+        // Procura a coluna com o cabeçalho "Nome" na primeira linha
+        const headers = rows[0].map(h => h.replace(/"/g, '').trim().toLowerCase());
+        let nameIndex = headers.indexOf('nome');
+        if (nameIndex === -1) nameIndex = 0; // Fallback caso o cabeçalho mude
+
+        // Pega todos os nomes da coluna "Nome"
+        const poloNames = rows.slice(1)
+            .map(row => row[nameIndex] ? row[nameIndex].replace(/"/g, '').trim() : '')
+            .filter(name => name.length > 0);
+
+        // Preenche o campo select com a lista carregada
+        poloSelect.innerHTML = `
+            <option value="" disabled selected>Selecione o Polo...</option>
+            ${poloNames.map(name => `<option value="${name}">${name}</option>`).join('')}
+        `;
+    } catch (error) {
+        console.error("Erro ao carregar lista da planilha:", error);
+        poloSelect.innerHTML = `<option value="" disabled selected>Erro ao carregar lista de polos</option>`;
+    }
+}
+let allPoloNames = [];
+
+async function loadPolosFromGoogleSheets() {
+    const SHEET_ID = '1fVH0Yc4Zo6PKcwEpWSgSbAPnSVLXqgaahj9i3HdK92c';
+    const GID = '1722842106'; 
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+
+    const poloInput = document.getElementById('poloName');
+    const dropdown = document.getElementById('poloDropdown');
+
+    if (!poloInput || !dropdown) return;
+
+    try {
+        const response = await fetch(csvUrl);
+        const data = await response.text();
+
+        const rows = data.split('\n').map(row => row.split(','));
+
+        const headers = rows[0].map(h => h.replace(/"/g, '').trim().toLowerCase());
+        let nameIndex = headers.indexOf('nome');
+        if (nameIndex === -1) nameIndex = 0;
+
+        allPoloNames = rows.slice(1)
+            .map(row => row[nameIndex] ? row[nameIndex].replace(/"/g, '').trim() : '')
+            .filter(name => name.length > 0);
+
+        // Dispara APENAS durante a digitação
+        poloInput.addEventListener('input', (e) => {
+            renderCustomDropdown(e.target.value);
+        });
+
+        // Oculta ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!poloInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+    } catch (error) {
+        console.error("Erro ao carregar lista de polos:", error);
+    }
+}
+
+function renderCustomDropdown(searchTerm) {
+    const dropdown = document.getElementById('poloDropdown');
+    const poloInput = document.getElementById('poloName');
+    if (!dropdown || !poloInput) return;
+
+    const cleanSearch = searchTerm.toLowerCase().trim();
+
+    // EXIGÊNCIA: Se o campo estiver vazio ou tiver menos de 1 caractere, esconde a lista imediatamente
+    if (cleanSearch.length === 0) {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    // Filtra os polos conforme o texto digitado (limite de 5 resultados)
+    const filtered = allPoloNames
+        .filter(name => name.toLowerCase().includes(cleanSearch))
+        .slice(0, 5);
+
+    if (filtered.length === 0) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    // Monta os itens do menu suspenso
+    dropdown.innerHTML = filtered.map(name => `
+        <div class="polo-item px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-blue cursor-pointer transition-colors font-medium flex items-center justify-between" data-value="${name}">
+            <span>${name}</span>
+        </div>
+    `).join('');
+
+    dropdown.classList.remove('hidden');
+
+    // Clique na opção desejada
+    dropdown.querySelectorAll('.polo-item').forEach(item => {
+        item.addEventListener('click', () => {
+            poloInput.value = item.getAttribute('data-value');
+            dropdown.classList.add('hidden');
         });
     });
 }
