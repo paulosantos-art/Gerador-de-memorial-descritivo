@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel ADM - Central de Validação</title>
+    
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- JSPDF PARA GERAR PDF VETORIAL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#0066FF',
+                        'brand-navy': '#1A3666',
+                        'brand-green': '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+
+    <!-- VALIDAÇÃO DE SESSÃO ADM -->
+    <script>
+        if (localStorage.getItem('userProfile') !== 'adm') {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- CABEÇALHO -->
+    <header class="bg-brand-navy text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="channels4_profile-removebg-preview.png" alt="Logo UniFECAF" class="w-10 h-10 object-contain">
+                <div>
+                    <h1 class="text-lg font-bold">Painel de Validação</h1>
+                    <p class="text-xs text-slate-300">Gestão e Aprovação de Memoriais Descritivos</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all font-semibold cursor-pointer">
+                Sair
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO DO DASHBOARD -->
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        
+        <!-- CARDS DE MÉTRICAS (AJUSTADO PARA 2 COLUNAS: PENDENTES E APROVADOS) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase">Pendentes</p>
+                    <h3 class="text-2xl font-black text-amber-500 mt-1" id="countPendente">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center font-bold">⏳</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase">Aprovados</p>
+                    <h3 class="text-2xl font-black text-emerald-500 mt-1" id="countAprovado">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold">✓</div>
+            </div>
+        </div>
+
+        <!-- GERENCIAMENTO DE E-MAILS DA EQUIPE ADM (RECOLHÍVEL) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+            <!-- BOTÃO PARA EXPANDIR/RECOLHER -->
+            <button type="button" onclick="toggleConfigEmails()" class="w-full p-4 px-6 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors cursor-pointer text-left">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">E-mails de Notificação (ADM)</h3>
+                        <p class="text-xs text-slate-400">Configure quem recebe os alertas quando um Polo envia um memorial</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="badgeQtdEmails" class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">0 e-mails</span>
+                    <svg id="iconChevron" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </button>
+
+            <!-- CONTEÚDO RECOLHÍVEL -->
+            <div id="boxConfigEmails" class="hidden p-6 pt-3 border-t border-slate-100 bg-slate-50/50">
+                <div class="flex gap-2 mb-4 max-w-lg">
+                    <input type="email" id="novoEmailAdmInput" placeholder="digite.email@unifecaf.com.br" 
+                           class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-blue">
+                    <button onclick="adicionarEmailAdm()" type="button" 
+                            class="px-4 py-2 bg-brand-navy hover:bg-slate-900 text-white rounded-xl font-bold text-sm transition-all cursor-pointer">
+                        + Adicionar
+                    </button>
+                </div>
+
+                <!-- Lista com os e-mails -->
+                <div id="listaEmailsAdm" class="flex flex-wrap gap-2">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TABELA PRINCIPAL DE MEMORIAIS -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="text-base font-bold text-slate-800">Memoriais Enviados pelos Polos</h2>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <th class="p-4">Polo</th>
+                            <th class="p-4">E-mail Contato</th>
+                            <th class="p-4">Data Envio</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-center">Ação / Validação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memorialsTableBody" class="divide-y divide-slate-100 text-sm">
+                        <tr>
+                            <td colspan="5" class="p-12 text-center text-slate-400 font-medium">
+                                Nenhum memorial enviado até o momento.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CONTROLES DE PAGINAÇÃO (LIMITADO A 10 POR PÁGINA) -->
+            <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100">
+                <span class="text-xs font-semibold text-slate-500" id="paginationInfo">Mostrando 0 de 0</span>
+                <div class="flex items-center gap-2">
+                    <button id="btnPrevPage" onclick="changePage(-1)" class="px-3 py-1.5 text-xs font-bold bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Anterior
+                    </button>
+                    <span id="pageIndicator" class="text-xs font-bold text-slate-700 px-2">Página 1 de 1</span>
+                    <button id="btnNextPage" onclick="changePage(1)" class="px-3 py-1.5 text-xs font-bold bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Próxima
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="script-adm.js"></script>
+</body>
+</html>
