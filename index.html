@@ -29,11 +29,29 @@
         }
     </script>
 
-    <!-- SweetAlert2 CDN (Adicionado para os alertas funcionarem) -->
+    <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- FIREBASE CONEXÃO NUVEM (INSERIDO AQUI) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAeh0q7QOkP0tLGbi8XuebVFtSedSDibJo",
+        authDomain: "memorial-descritivo---polos.firebaseapp.com",
+        projectId: "memorial-descritivo---polos",
+        storageBucket: "memorial-descritivo---polos.firebasestorage.app",
+        messagingSenderId: "398898517676",
+        appId: "1:398898517676:web:55406a9a17e7f84782b109",
+        measurementId: "G-DV7TG9GNZ6"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+    </script>
 
     <!-- Estilos Fixos Light Mode + Modelo de Slides UniFECAF -->
     <style>
@@ -223,9 +241,13 @@
                     <h1 class="text-3xl font-black text-white tracking-tight leading-none">Gerador de Memorial Descritivo</h1>
                 </div>
             </div>
-            <span class="text-sm font-extrabold px-4 py-2 bg-white/15 text-white rounded-full backdrop-blur-md border border-white/20">
-                Sistema Interno
-            </span>
+            <a href="Login.html" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold transition-all border border-white/30 shadow-xs cursor-pointer no-underline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Voltar para Login
+            </a>
         </div>
     </header>
 
@@ -233,57 +255,56 @@
         <form id="memorialForm" class="space-y-8" onsubmit="event.preventDefault();">
             
             <!-- SEÇÃO 1: DADOS DA CAPA -->
-           <!-- SEÇÃO 1: DADOS DA CAPA (Corrigida com relative e z-30 para não cortar o dropdown) -->
-<section id="section-capa" class="bg-white rounded-2xl border border-slate-200 shadow-sm relative z-30">
-    <div class="bg-brand-navy p-5 text-white rounded-t-2xl">
-        <h2 class="text-base font-bold flex items-center gap-2.5">
-            <span class="w-3 h-3 rounded-full bg-brand-green"></span>
-            1. Dados da Capa do Documento (Polo UniFECAF)
-        </h2>
-    </div>
-    
-    <div class="p-7 grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Campo do Polo -->
-        <div class="relative">
-            <label for="poloName" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                Nome/ID do Polo <span class="text-rose-500">*</span>
-            </label>
-            
-            <div class="relative">
-                <input type="text" id="poloName" autocomplete="off" placeholder="Digite para buscar o polo..." required
-                    class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 pr-10 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
-                
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
+            <section id="section-capa" class="bg-white rounded-2xl border border-slate-200 shadow-sm relative z-30">
+                <div class="bg-brand-navy p-5 text-white rounded-t-2xl">
+                    <h2 class="text-base font-bold flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-brand-green"></span>
+                        1. Dados da Capa do Documento (Polo UniFECAF)
+                    </h2>
                 </div>
-            </div>
+                
+                <div class="p-7 grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Campo do Polo -->
+                    <div class="relative">
+                        <label for="poloName" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                            Nome/ID do Polo <span class="text-rose-500">*</span>
+                        </label>
+                        
+                        <div class="relative">
+                            <input type="text" id="poloName" autocomplete="off" placeholder="Digite para buscar o polo..." required
+                                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 pr-10 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                            
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
 
-            <!-- Dropdown flutuante com z-50 -->
-            <div id="poloDropdown" class="hidden absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100 transition-all">
-            </div>
-        </div>
+                        <!-- Dropdown flutuante com z-50 -->
+                        <div id="poloDropdown" class="hidden absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100 transition-all">
+                        </div>
+                    </div>
 
-        <!-- Campo de Endereço -->
-        <div>
-            <label for="poloAddress" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                Endereço / Bairro
-            </label>
-            <input type="text" id="poloAddress" placeholder="EX: RUA SÃO PEDRO 115 - CENTRO" 
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
-        </div>
+                    <!-- Campo de Endereço -->
+                    <div>
+                        <label for="poloAddress" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                            Endereço / Bairro
+                        </label>
+                        <input type="text" id="poloAddress" placeholder="EX: RUA SÃO PEDRO 115 - CENTRO" 
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                    </div>
 
-        <!-- Campo de CEP -->
-        <div>
-            <label for="poloCep" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                CEP
-            </label>
-            <input type="text" id="poloCep" placeholder="EX: 37550-047" 
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
-        </div>
-    </div>
-</section>
+                    <!-- Campo de CEP -->
+                    <div>
+                        <label for="poloCep" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                            CEP
+                        </label>
+                        <input type="text" id="poloCep" placeholder="EX: 37550-047" 
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 focus:outline-none transition-all">
+                    </div>
+                </div>
+            </section>
 
             <!-- SEÇÃO 2: ESPAÇOS DA UNIDADE -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -302,12 +323,12 @@
 
             <!-- AÇÃO DA APLICAÇÃO -->
             <div class="flex justify-end gap-4 pt-2">
-                <button type="button" id="btnGeneratePDF" 
-                    class="bg-brand-green hover:bg-emerald-600 text-white font-bold text-sm px-9 py-4 rounded-xl shadow-lg shadow-brand-green/20 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center gap-2.5 cursor-pointer">
+                <button type="button" id="btnSubmitValidation" onclick="enviarParaValidacao(event)"
+                    class="bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm px-9 py-4 rounded-xl shadow-lg shadow-brand-blue/20 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center gap-2.5 cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
-                    Gerar PDF (Modelo Slides UniFECAF)
+                    Encaminhar para Validação do ADM
                 </button>
             </div>
         </form>
