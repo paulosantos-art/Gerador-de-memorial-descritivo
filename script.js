@@ -3,6 +3,24 @@
  */
 
 // =========================================================================
+// INICIALIZAÇÃO DO FIREBASE
+// =========================================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyAeh0q7QOkP0tLGbi8XuebVFtSedSDibJo",
+    authDomain: "memorial-descritivo---polos.firebaseapp.com",
+    projectId: "memorial-descritivo---polos",
+    storageBucket: "memorial-descritivo---polos.firebasestorage.app",
+    messagingSenderId: "398898517676",
+    appId: "1:398898517676:web:55406a9a17e7f84782b109",
+    measurementId: "G-DV7TG9GNZ6"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+// =========================================================================
 // CONFIGURAÇÃO DOS AMBIENTES
 // =========================================================================
 
@@ -40,7 +58,6 @@ window.onbeforeunload = function () {
 // DADOS DA CAPA
 // =========================================================================
 
-// Helper universal para pegar Endereço e CEP independente do ID utilizado no HTML
 function getDadosCapa() {
     const poloInput =
         document.getElementById('poloName') ||
@@ -88,7 +105,6 @@ const UNIFECAF_LOGO_WHITE = `
 document.addEventListener("DOMContentLoaded", () => {
     window.scrollTo(0, 0);
 
-    // Inicializa o objeto de estado limpando qualquer lixo de memória
     spacesMasterList.forEach(space => {
         state.spaces[space.id] = {
             description: "",
@@ -173,17 +189,14 @@ function renderFormSpaces() {
 }
 
 // =========================================================================
-// UPLOAD DE IMAGENS
+// UPLOAD E COMPRESSÃO ULTRA-OTIMIZADA (PARA MANTER < 1MB NO FIRESTORE)
 // =========================================================================
 
 function handleFileUpload(spaceId, input) {
     const files = Array.from(input.files);
 
     if (!state.spaces[spaceId]) {
-        state.spaces[spaceId] = {
-            description: "",
-            images: []
-        };
+        state.spaces[spaceId] = { description: "", images: [] };
     }
 
     const currentImages = state.spaces[spaceId].images;
@@ -193,10 +206,8 @@ function handleFileUpload(spaceId, input) {
             icon: 'warning',
             title: 'Limite Excedido',
             text: 'Você só pode anexar até 4 fotos por ambiente.',
-            confirmButtonText: 'Entendido',
             confirmButtonColor: '#0E77CC'
         });
-
         input.value = "";
         return;
     }
@@ -204,25 +215,55 @@ function handleFileUpload(spaceId, input) {
     let loadedCount = 0;
 
     files.forEach(file => {
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            state.spaces[spaceId].images.push(e.target.result);
-
+        // Reduz a largura máxima para 600px e a qualidade para 40% (JPEG Otimizado)
+        // Isso reduz o peso de cada foto para ~30KB a 50KB mantendo boa nitidez.
+        compressImage(file, 600, 0.4, (base64Compressed) => {
+            state.spaces[spaceId].images.push(base64Compressed);
             loadedCount++;
 
             if (loadedCount === files.length) {
                 renderPreviews(spaceId);
                 applyConditionalValidation(spaceId);
             }
-        };
-
-        reader.readAsDataURL(file);
+        });
     });
 
     input.value = "";
 }
 
+function compressImage(file, maxWidth = 600, quality = 0.4, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo branco garantido para evitar artefatos pretos em PNGs transparentes
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            callback(compressedBase64);
+        };
+    };
+}
 function removeImage(spaceId, index) {
     if (state.spaces[spaceId] && state.spaces[spaceId].images) {
         state.spaces[spaceId].images.splice(index, 1);
@@ -404,168 +445,62 @@ function generatePDF() {
 
     let activeSpacesCount = 0;
 
-    // =========================================================================
     // CAPA
-    // =========================================================================
-
     const coverSlide = document.createElement('div');
-
     coverSlide.className = 'slide-page cover-slide';
-
     coverSlide.innerHTML = `
-        <div 
-            style="
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: center; 
-                min-height: 190mm; 
-                text-align: center; 
-                padding: 0 20mm;
-            "
-        >
-
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 190mm; text-align: center; padding: 0 20mm;">
             <div style="margin-bottom: 12px; width: 100%;">
                 ${UNIFECAF_LOGO_WHITE}
             </div>
-
-            <div 
-                style="
-                    font-size: 18pt; 
-                    font-weight: 700; 
-                    color: #ffffff; 
-                    margin-bottom: 50px;
-                "
-            >
+            <div style="font-size: 18pt; font-weight: 700; color: #ffffff; margin-bottom: 50px;">
                 Memorial Descritivo de Infraestrutura
             </div>
-
-            <div 
-                style="
-                    display: flex; 
-                    flex-direction: column; 
-                    gap: 6px; 
-                    color: #ffffff; 
-                    text-align: center;
-                "
-            >
-
-                <div 
-                    style="
-                        font-size: 16pt; 
-                        font-weight: 800; 
-                        text-transform: uppercase;
-                    "
-                >
+            <div style="display: flex; flex-direction: column; gap: 6px; color: #ffffff; text-align: center;">
+                <div style="font-size: 16pt; font-weight: 800; text-transform: uppercase;">
                     ${dados.polo}
                 </div>
-
-                <div 
-                    style="
-                        font-size: 12pt; 
-                        font-weight: 600; 
-                        text-transform: uppercase; 
-                        opacity: 0.95;
-                    "
-                >
+                <div style="font-size: 12pt; font-weight: 600; text-transform: uppercase; opacity: 0.95;">
                     ${dados.endereco}
                 </div>
-
-                <div 
-                    style="
-                        font-size: 11pt; 
-                        font-weight: 600; 
-                        text-transform: uppercase; 
-                        opacity: 0.85;
-                    "
-                >
+                <div style="font-size: 11pt; font-weight: 600; text-transform: uppercase; opacity: 0.85;">
                     CEP: ${dados.cep}
                 </div>
-
             </div>
         </div>
     `;
-
     templateContainer.appendChild(coverSlide);
 
-    // =========================================================================
     // SLIDES INTERNOS
-    // =========================================================================
-
     spacesMasterList.forEach(spaceMeta => {
         const spaceData = state.spaces[spaceMeta.id];
-
         if (!spaceData) return;
 
-        const hasDesc =
-            spaceData.description.trim().length > 0;
-
-        const hasImages =
-            spaceData.images.length > 0;
+        const hasDesc = spaceData.description.trim().length > 0;
+        const hasImages = spaceData.images.length > 0;
 
         if (hasDesc && hasImages) {
-
             activeSpacesCount++;
-
             const slide = document.createElement('div');
-
             slide.className = 'slide-page';
 
             let formattedText = spaceData.description;
 
-            if (
-                formattedText.includes('-') ||
-                formattedText.includes('•')
-            ) {
-
+            if (formattedText.includes('-') || formattedText.includes('•')) {
                 const lines = formattedText.split('\n');
-
                 formattedText = lines.map(line => {
-
-                    const cleanLine = line
-                        .replace(/^[-•]\s*/, '')
-                        .trim();
-
+                    const cleanLine = line.replace(/^[-•]\s*/, '').trim();
                     return cleanLine
-                        ? `<li style="margin-bottom:8px;">
-                            <span style="color:#191919;">
-                                ${cleanLine}
-                            </span>
-                           </li>`
+                        ? `<li style="margin-bottom:8px;"><span style="color:#191919;">${cleanLine}</span></li>`
                         : '';
-
                 }).join('');
 
-                formattedText = `
-                    <ul 
-                        style="
-                            padding-left: 18px; 
-                            list-style-type: square; 
-                            color:#17A460;
-                        "
-                    >
-                        ${formattedText}
-                    </ul>
-                `;
-
+                formattedText = `<ul style="padding-left: 18px; list-style-type: square; color:#17A460;">${formattedText}</ul>`;
             } else {
-
-                formattedText = `
-                    <p 
-                        style="
-                            color:#191919; 
-                            font-size:11pt; 
-                            line-height:1.6; 
-                            white-space:pre-line;
-                        "
-                    >
-                        ${spaceData.description}
-                    </p>
-                `;
+                formattedText = `<p style="color:#191919; font-size:11pt; line-height:1.6; white-space:pre-line;">${spaceData.description}</p>`;
             }
 
             let gridClass = "images-grid";
-
             if (spaceData.images.length === 1) {
                 gridClass += " single-img";
             } else if (spaceData.images.length === 2) {
@@ -574,58 +509,28 @@ function generatePDF() {
 
             const imagesHTML = `
                 <div class="${gridClass}">
-                    ${
-                        spaceData.images
-                            .map(img =>
-                                `<img src="${img}" class="img-card" />`
-                            )
-                            .join('')
-                    }
+                    ${spaceData.images.map(img => `<img src="${img}" class="img-card" />`).join('')}
                 </div>
             `;
 
             slide.innerHTML = `
                 <div class="slide-header">
-
                     <div class="slide-header-left">
                         <span class="header-dot"></span>
-                        <div class="slide-title-pill">
-                            ${spaceMeta.title}
-                        </div>
+                        <div class="slide-title-pill">${spaceMeta.title}</div>
                     </div>
-
-                    <span class="slide-brand-tag">
-                        UniFECAF
-                    </span>
-
+                    <span class="slide-brand-tag">UniFECAF</span>
                 </div>
-
                 <div class="slide-body">
-
                     ${imagesHTML}
-
                     <div class="description-box">
-
-                        <div class="description-box-title">
-                            Especificações & Equipamentos
-                        </div>
-
-                        <div class="description-text">
-                            ${formattedText}
-                        </div>
-
+                        <div class="description-box-title">Especificações & Equipamentos</div>
+                        <div class="description-text">${formattedText}</div>
                     </div>
-
                 </div>
-
                 <div class="slide-footer">
-                    <span>
-                        Memorial Descritivo de Infraestrutura
-                    </span>
-
-                    <span class="logo-text">
-                        ${dados.polo.toUpperCase()}
-                    </span>
+                    <span>Memorial Descritivo de Infraestrutura</span>
+                    <span class="logo-text">${dados.polo.toUpperCase()}</span>
                 </div>
             `;
 
@@ -634,66 +539,35 @@ function generatePDF() {
     });
 
     if (activeSpacesCount === 0) {
-
         Swal.fire({
             icon: 'info',
             title: 'Formulário Vazio',
             text: 'Preencha ao menos um ambiente para gerar o PDF.',
             confirmButtonColor: '#0E77CC'
         });
-
         return;
     }
 
     const opt = {
         margin: 0,
-
-        filename:
-            `Memorial_Descritivo_UniFECAF_${dados.polo.replace(/\s+/g, '_')}.pdf`,
-
-        image: {
-            type: 'jpeg',
-            quality: 0.98
-        },
-
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            logging: false,
-            scrollX: 0,
-            scrollY: 0
-        },
-
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'landscape'
-        },
-
-        pagebreak: {
-            mode: ['css', 'legacy']
-        }
+        filename: `Memorial_Descritivo_UniFECAF_${dados.polo.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'legacy'] }
     };
 
-    html2pdf()
-        .set(opt)
-        .from(templateContainer)
-        .save()
-        .then(() => {
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Sucesso!',
-                text: 'O Memorial foi baixado com sucesso.',
-                confirmButtonColor: '#17A460'
-            }).then(() => {
-
-                window.scrollTo(0, 0);
-                window.location.reload();
-
-            });
+    html2pdf().set(opt).from(templateContainer).save().then(() => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'O Memorial foi baixado com sucesso.',
+            confirmButtonColor: '#17A460'
+        }).then(() => {
+            window.scrollTo(0, 0);
+            window.location.reload();
         });
+    });
 }
 
 // =========================================================================
@@ -701,89 +575,38 @@ function generatePDF() {
 // =========================================================================
 
 async function loadPolosFromGoogleSheets() {
-
-    const SHEET_ID =
-        '1fVH0Yc4Zo6PKcwEpWSgSbAPnSVLXqgaahj9i3HdK92c';
-
+    const SHEET_ID = '1fVH0Yc4Zo6PKcwEpWSgSbAPnSVLXqgaahj9i3HdK92c';
     const GID = '1722842106';
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
 
-    const csvUrl =
-        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
-
-    const poloInput =
-        document.getElementById('poloName') ||
-        document.getElementById('nomePolo');
-
-    const dropdown =
-        document.getElementById('poloDropdown');
+    const poloInput = document.getElementById('poloName') || document.getElementById('nomePolo');
+    const dropdown = document.getElementById('poloDropdown');
 
     if (!poloInput || !dropdown) return;
 
     try {
-
         const response = await fetch(csvUrl);
-
         const data = await response.text();
+        const rows = data.split('\n').map(row => row.split(','));
+        const headers = rows[0].map(h => h.replace(/"/g, '').trim().toLowerCase());
 
-        const rows =
-            data
-                .split('\n')
-                .map(row => row.split(','));
+        let nameIndex = headers.indexOf('nome');
+        if (nameIndex === -1) nameIndex = 0;
 
-        const headers =
-            rows[0]
-                .map(h =>
-                    h.replace(/"/g, '')
-                        .trim()
-                        .toLowerCase()
-                );
-
-        let nameIndex =
-            headers.indexOf('nome');
-
-        if (nameIndex === -1) {
-            nameIndex = 0;
-        }
-
-        allPoloNames =
-            rows
-                .slice(1)
-                .map(row =>
-                    row[nameIndex]
-                        ? row[nameIndex]
-                            .replace(/"/g, '')
-                            .trim()
-                        : ''
-                )
-                .filter(name => name.length > 0);
+        allPoloNames = rows.slice(1).map(row => row[nameIndex] ? row[nameIndex].replace(/"/g, '').trim() : '').filter(name => name.length > 0);
 
         poloInput.addEventListener('input', (e) => {
-
             isPoloSelected = false;
-
             renderCustomDropdown(e.target.value);
-
         });
 
         document.addEventListener('click', (e) => {
-
-            if (
-                !poloInput.contains(e.target) &&
-                !dropdown.contains(e.target)
-            ) {
-
+            if (!poloInput.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.add('hidden');
-
             }
         });
-
     } catch (error) {
-
-        console.error(
-            "Erro ao carregar polos:",
-            error
-        );
-
+        console.error("Erro ao carregar polos:", error);
     }
 }
 
@@ -792,397 +615,198 @@ async function loadPolosFromGoogleSheets() {
 // =========================================================================
 
 function renderCustomDropdown(searchTerm) {
-
-    const dropdown =
-        document.getElementById('poloDropdown');
-
-    const poloInput =
-        document.getElementById('poloName') ||
-        document.getElementById('nomePolo');
+    const dropdown = document.getElementById('poloDropdown');
+    const poloInput = document.getElementById('poloName') || document.getElementById('nomePolo');
 
     if (!dropdown || !poloInput) return;
 
-    const cleanSearch =
-        searchTerm.toLowerCase().trim();
+    const cleanSearch = searchTerm.toLowerCase().trim();
 
     if (cleanSearch.length === 0) {
-
         dropdown.classList.add('hidden');
-
         return;
     }
 
-    const filtered =
-        allPoloNames
-            .filter(name =>
-                name.toLowerCase()
-                    .includes(cleanSearch)
-            )
-            .slice(0, 5);
+    const filtered = allPoloNames.filter(name => name.toLowerCase().includes(cleanSearch)).slice(0, 5);
 
     if (filtered.length === 0) {
-
-        dropdown.innerHTML = `
-            <div 
-                class="px-4 py-3 text-sm text-slate-400 italic text-center"
-            >
-                Nenhum polo encontrado
-            </div>
-        `;
-
+        dropdown.innerHTML = `<div class="px-4 py-3 text-sm text-slate-400 italic text-center">Nenhum polo encontrado</div>`;
         dropdown.classList.remove('hidden');
-
         return;
     }
 
-    dropdown.innerHTML =
-        filtered.map(name => `
-            <div 
-                class="polo-item px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-blue cursor-pointer font-medium"
-                data-value="${name}"
-            >
-                ${name}
-            </div>
-        `).join('');
+    dropdown.innerHTML = filtered.map(name => `
+        <div class="polo-item px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-brand-blue cursor-pointer font-medium" data-value="${name}">
+            ${name}
+        </div>
+    `).join('');
 
     dropdown.classList.remove('hidden');
 
-    dropdown
-        .querySelectorAll('.polo-item')
-        .forEach(item => {
-
-            item.addEventListener('click', () => {
-
-                poloInput.value =
-                    item.getAttribute('data-value');
-
-                isPoloSelected = true;
-
-                dropdown.classList.add('hidden');
-
-            });
-
+    dropdown.querySelectorAll('.polo-item').forEach(item => {
+        item.addEventListener('click', () => {
+            poloInput.value = item.getAttribute('data-value');
+            isPoloSelected = true;
+            dropdown.classList.add('hidden');
         });
+    });
 }
 
 // =========================================================================
-// ENVIO DO MEMORIAL PARA VALIDAÇÃO
+// ENVIO DO MEMORIAL PARA VALIDAÇÃO (INTEGRADO AO FIREBASE)
 // =========================================================================
 
 async function enviarParaValidacao(event) {
-
     if (event) {
         event.preventDefault();
     }
 
     const dados = getDadosCapa();
-
-    // ---------------------------------------------------------------------
-    // NOVO: RECUPERA O E-MAIL SALVO NO LOGIN
-    // ---------------------------------------------------------------------
-
-    const emailUsuarioPolo =
-        localStorage.getItem('emailUsuarioPolo') || '';
-
-    // ---------------------------------------------------------------------
-    // VALIDAÇÃO DO POLO
-    // ---------------------------------------------------------------------
+    const emailUsuarioPolo = localStorage.getItem('emailUsuarioPolo') || '';
 
     if (!dados.polo) {
-
         Swal.fire({
             icon: 'warning',
             title: 'Campo Obrigatório',
             text: 'Informe o Nome do Polo.',
             confirmButtonColor: '#0E77CC'
         });
-
         return;
     }
 
-    // ---------------------------------------------------------------------
-    // NOVO: VALIDAÇÃO DO E-MAIL DO LOGIN
-    // ---------------------------------------------------------------------
-
     if (!emailUsuarioPolo) {
-
         Swal.fire({
             icon: 'warning',
             title: 'E-mail não identificado',
             text: 'Não foi possível identificar o e-mail utilizado no acesso. Faça o login novamente para continuar.',
             confirmButtonColor: '#0066FF'
         });
-
         return;
     }
 
-    // Validação adicional do formato do e-mail
-    const emailRegex =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailUsuarioPolo)) {
-
         Swal.fire({
             icon: 'warning',
             title: 'E-mail inválido',
             text: 'O e-mail utilizado no acesso não é válido. Faça o login novamente.',
             confirmButtonColor: '#0066FF'
         });
-
         return;
     }
-
-    // ---------------------------------------------------------------------
-    // COLETA DOS AMBIENTES
-    // ---------------------------------------------------------------------
 
     const ambientesValidos = [];
 
     spacesMasterList.forEach(spaceMeta => {
-
-        const spaceData =
-            state.spaces[spaceMeta.id];
-
+        const spaceData = state.spaces[spaceMeta.id];
         if (spaceData) {
+            const desc = spaceData.description.trim();
+            const fotos = spaceData.images;
 
-            const desc =
-                spaceData.description.trim();
-
-            const fotos =
-                spaceData.images;
-
-            if (
-                desc !== '' &&
-                fotos.length > 0
-            ) {
-
+            if (desc !== '' && fotos.length > 0) {
                 ambientesValidos.push({
-
-                    titulo:
-                        spaceMeta.title,
-
-                    descricao:
-                        desc,
-
-                    fotos:
-                        [...fotos]
-
+                    titulo: spaceMeta.title,
+                    descricao: desc,
+                    fotos: [...fotos]
                 });
             }
         }
     });
 
-    // ---------------------------------------------------------------------
-    // VALIDAÇÃO DO FORMULÁRIO
-    // ---------------------------------------------------------------------
-
     if (ambientesValidos.length === 0) {
-
         Swal.fire({
             icon: 'info',
             title: 'Formulário Vazio',
             text: 'Preencha ao menos um ambiente completo.',
             confirmButtonColor: '#0E77CC'
         });
-
         return;
     }
 
-    // ---------------------------------------------------------------------
-    // LOADING
-    // ---------------------------------------------------------------------
-
     Swal.fire({
-
         title: 'Enviando Memorial...',
-
-        text: 'Aguarde enquanto registramos seus dados.',
-
+        text: 'Aguarde enquanto salvamos seus dados na nuvem.',
         allowOutsideClick: false,
-
         didOpen: () => {
             Swal.showLoading();
         }
-
     });
-
-    // =========================================================================
-    // NOVO MEMORIAL
-    // =========================================================================
-    //
-    // AQUI FOI ADICIONADO:
-    //
-    // email: emailUsuarioPolo
-    //
-    // Esse é o principal ajuste para permitir que o ADM encontre o
-    // endereço de e-mail posteriormente.
-    // =========================================================================
 
     const novoMemorial = {
-
         id: Date.now(),
-
-        polo:
-            dados.polo,
-
-        endereco:
-            dados.endereco,
-
-        cep:
-            dados.cep,
-
-        // -------------------------------------------------------------
-        // E-MAIL DO USUÁRIO QUE FEZ LOGIN
-        // -------------------------------------------------------------
-        email:
-            emailUsuarioPolo,
-
-        dataEnvio:
-            new Date().toLocaleDateString('pt-BR'),
-
-        status:
-            'PENDENTE',
-
-        ambientes:
-            ambientesValidos
-
+        polo: dados.polo,
+        endereco: dados.endereco,
+        cep: dados.cep,
+        email: emailUsuarioPolo,
+        dataEnvio: new Date().toLocaleDateString('pt-BR'),
+        status: 'PENDENTE',
+        ambientes: ambientesValidos,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // =========================================================================
-    // 1. SALVA LOCALMENTE (CACHE)
-    // =========================================================================
+    try {
+        // 1. SALVA NO FIREBASE FIRESTORE
+        await db.collection('memoriais').add(novoMemorial);
 
-    const memoriaisExistentes =
-        JSON.parse(
-            localStorage.getItem('memoriaisEnviados')
-        ) || [];
+        // 2. SALVA LOCALMENTE (CACHE/LOG)
+        const memoriaisExistentes = JSON.parse(localStorage.getItem('memoriaisEnviados')) || [];
+        memoriaisExistentes.push(novoMemorial);
+        localStorage.setItem('memoriaisEnviados', JSON.stringify(memoriaisExistentes));
 
-    memoriaisExistentes.push(
-        novoMemorial
-    );
+        // 3. NOTIFICA OS ADMS VIA GOOGLE APPS SCRIPT
+        await notificarAdmsNovoMemorial(dados.polo, emailUsuarioPolo);
 
-    localStorage.setItem(
-        'memoriaisEnviados',
-        JSON.stringify(memoriaisExistentes)
-    );
+        // 4. ALERTA DE SUCESSO
+        Swal.fire({
+            icon: 'success',
+            title: 'Enviado com Sucesso!',
+            text: `O Memorial do polo "${dados.polo}" foi salvo no Firebase e enviado para validação. A resposta será enviada para ${emailUsuarioPolo}.`,
+            confirmButtonColor: '#17A460'
+        }).then(() => {
+            window.scrollTo(0, 0);
+            window.location.reload();
+        });
 
-    // =========================================================================
-    // 2. NOTIFICA OS ADMS
-    // =========================================================================
-
-    await notificarAdmsNovoMemorial(
-        dados.polo,
-        emailUsuarioPolo
-    );
-
-    // =========================================================================
-    // 3. ALERTA DE SUCESSO
-    // =========================================================================
-
-    Swal.fire({
-
-        icon: 'success',
-
-        title: 'Enviado com Sucesso!',
-
-        text:
-            `O Memorial do polo "${dados.polo}" foi registrado e a equipe administrativa foi notificada. A resposta será enviada para ${emailUsuarioPolo}.`,
-
-        confirmButtonColor: '#17A460'
-
-    }).then(() => {
-
-        window.scrollTo(0, 0);
-
-        window.location.reload();
-
-    });
+    } catch (error) {
+        console.error("Erro ao salvar no Firebase:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro ao Enviar',
+            text: 'Houve um problema ao conectar com o banco de dados. Tente novamente mais tarde.',
+            confirmButtonColor: '#E11D48'
+        });
+    }
 }
 
 // =========================================================================
 // INTEGRAÇÃO COM GOOGLE APPS SCRIPT
 // =========================================================================
 
-const URL_GOOGLE_SCRIPT_POLO =
-    'https://script.google.com/macros/s/AKfycbwmDh2tDlscfVGP7WnyS-piEKWqvNfJ9sgH0x5nLVBQYOTvBH7TrGtWxJPCcjGL2Vsi9w/exec';
+const URL_GOOGLE_SCRIPT_POLO = 'https://script.google.com/macros/s/AKfycbwmDh2tDlscfVGP7WnyS-piEKWqvNfJ9sgH0x5nLVBQYOTvBH7TrGtWxJPCcjGL2Vsi9w/exec';
 
-// =========================================================================
-// NOTIFICAÇÃO PARA OS ADMS
-// =========================================================================
+async function notificarAdmsNovoMemorial(poloNome, emailPolo = '') {
+    const admsSalvos = JSON.parse(localStorage.getItem('listaEmailsAdm')) || ['admin@unifecaf.com.br'];
 
-async function notificarAdmsNovoMemorial(
-    poloNome,
-    emailPolo = ''
-) {
-
-    const admsSalvos =
-        JSON.parse(
-            localStorage.getItem('listaEmailsAdm')
-        ) || [
-            'admin@unifecaf.com.br'
-        ];
-
-    if (admsSalvos.length === 0) {
-        return;
-    }
-
-    // =========================================================================
-    // PAYLOAD ENVIADO AO GOOGLE APPS SCRIPT
-    // =========================================================================
+    if (admsSalvos.length === 0) return;
 
     const payload = {
-
-        tipo:
-            'NOVO_MEMORIAL',
-
-        poloNome:
-            poloNome,
-
-        // E-mail do polo também é enviado
-        // para que o Apps Script possa utilizá-lo,
-        // caso necessário.
-        emailPolo:
-            emailPolo,
-
-        emailsAdm:
-            admsSalvos
-
+        tipo: 'NOVO_MEMORIAL',
+        poloNome: poloNome,
+        emailPolo: emailPolo,
+        emailsAdm: admsSalvos
     };
 
     try {
-
-        await fetch(
-            URL_GOOGLE_SCRIPT_POLO,
-            {
-                method: 'POST',
-
-                mode: 'no-cors',
-
-                headers: {
-                    'Content-Type':
-                        'text/plain;charset=utf-8'
-                },
-
-                body:
-                    JSON.stringify(payload)
-            }
-        );
-
-        console.log(
-            "Notificação enviada ao Google Apps Script com sucesso."
-        );
-
-        console.log(
-            "E-mail do polo registrado:",
-            emailPolo
-        );
-
+        await fetch(URL_GOOGLE_SCRIPT_POLO, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log("Notificação enviada com sucesso.");
     } catch (err) {
-
-        console.error(
-            'Erro ao notificar os administradores:',
-            err
-        );
-
+        console.error('Erro ao notificar os administradores:', err);
     }
 }
