@@ -17,6 +17,7 @@
     <!-- FIREBASE SDKs (COMPAT) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -154,6 +155,26 @@
         </div>
 
     </main>
+
+    <!-- INICIALIZAÇÃO DAS CREDENCIAIS DO FIREBASE -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAeh0q7QOkP0tLGbi8XuebVFtSedSDibJo",
+            authDomain: "memorial-descritivo---polos.firebaseapp.com",
+            projectId: "memorial-descritivo---polos",
+            storageBucket: "memorial-descritivo---polos.firebasestorage.app",
+            messagingSenderId: "398898517676",
+            appId: "1:398898517676:web:55406a9a17e7f84782b109",
+            measurementId: "G-DV7TG9GNZ6"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            firebase.analytics();
+        }
+
+        var db = firebase.firestore();
+    </script>
 
     <!-- CARREGAMENTO DO SCRIPT ADMINISTRATIVO -->
     <script src="script-adm.js"></script>
