@@ -4,9 +4,10 @@
 
 let currentPage = 1;
 const itemsPerPage = 10;
+let listaMemoriaisGlobal = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    carregarMemoriais();
+    escutarMemoriaisEmTempoReal();
     renderizarListaEmailsAdm();
 });
 
@@ -21,20 +22,45 @@ function escaparHTML(str) {
         .replace(/'/g, '&#039;');
 }
 
+// Sincronização em tempo real via Firestore
+function escutarMemoriaisEmTempoReal() {
+    if (typeof db === 'undefined') {
+        console.error("Erro: O SDK do Firestore (db) não está inicializado.");
+        return;
+    }
+
+    db.collection('memoriais').orderBy('criadoEm', 'desc')
+      .onSnapshot((snapshot) => {
+          listaMemoriaisGlobal = [];
+          
+          snapshot.forEach((doc) => {
+              listaMemoriaisGlobal.push({
+                  id: doc.id,
+                  ...doc.data()
+              });
+          });
+
+          carregarMemoriais();
+      }, (error) => {
+          console.error("Erro ao sincronizar Firestore em tempo real:", error);
+      });
+}
+
 // =========================================================================
 // GERENCIAMENTO DA TABELA DE MEMORIAIS (COM PAGINAÇÃO)
 // =========================================================================
 
 function carregarMemoriais() {
-    const lista = JSON.parse(localStorage.getItem('memoriaisEnviados')) || [];
+    const lista = listaMemoriaisGlobal;
     const tbody = document.getElementById('memorialsTableBody');
 
     let countPendente = 0, countAprovado = 0;
 
     // Calcula os contadores globais independentemente da página atual
     lista.forEach(item => {
-        if (item.status === 'PENDENTE' || !item.status) countPendente++;
-        if (item.status === 'Aprovado' || item.status === 'APROVADO') countAprovado++;
+        const statusUpper = (item.status || '').toUpperCase();
+        if (statusUpper === 'PENDENTE' || !item.status) countPendente++;
+        if (statusUpper === 'APROVADO') countAprovado++;
     });
 
     if (document.getElementById('countPendente')) document.getElementById('countPendente').innerText = countPendente;
@@ -279,8 +305,7 @@ async function notificarAdmsNovoMemorial(poloNome, emailPolo) {
 // =========================================================================
 
 function analisarMemorial(id) {
-    const lista = JSON.parse(localStorage.getItem('memoriaisEnviados')) || [];
-    const item = lista.find(m => String(m.id) === String(id));
+    const item = listaMemoriaisGlobal.find(m => String(m.id) === String(id));
 
     if (!item) {
         Swal.fire({
@@ -315,7 +340,7 @@ function analisarMemorial(id) {
         allowOutsideClick: false
     }).then(async (result) => {
         if (result.isConfirmed) {
-            alterarStatus(id, 'Aprovado');
+            await alterarStatus(id, 'Aprovado');
             await notificarPoloPorEmail(item.email || item.emailContato, 'Aprovado', item.polo);
             gerarPDFSemFalhas(item);
         } else if (result.isDenied) {
@@ -617,38 +642,36 @@ async function gerarPDFSemFalhas(item) {
         title: 'PDF Gerado!',
         text: 'Arquivo baixado e notificação enviada ao polo com sucesso!',
         confirmButtonColor: '#10B981'
-    }).then(() => carregarMemoriais());
+    });
 }
 
 // =========================================================================
 // AÇÕES DE STATUS E AUTENTICAÇÃO
 // =========================================================================
 
-function alterarStatus(id, novoStatus) {
-    let lista = JSON.parse(localStorage.getItem('memoriaisEnviados')) || [];
-    lista = lista.map(item => {
-        if (String(item.id) === String(id)) {
-            item.status = novoStatus;
-        }
-        return item;
-    });
-    localStorage.setItem('memoriaisEnviados', JSON.stringify(lista));
-    carregarMemoriais();
+async function alterarStatus(id, novoStatus) {
+    try {
+        await db.collection('memoriais').doc(id).update({
+            status: novoStatus
+        });
+    } catch (error) {
+        console.error("Erro ao atualizar status:", error);
+    }
 }
 
-function excluirMemorial(id) {
-    let lista = JSON.parse(localStorage.getItem('memoriaisEnviados')) || [];
-    lista = lista.filter(item => String(item.id) !== String(id));
-    localStorage.setItem('memoriaisEnviados', JSON.stringify(lista));
-    
-    Swal.fire({
-        icon: 'success',
-        title: 'Memorial Rejeitado!',
-        text: 'Notificação enviada e o registro do polo foi excluído do sistema.',
-        confirmButtonColor: '#10B981'
-    }).then(() => {
-        carregarMemoriais();
-    });
+async function excluirMemorial(id) {
+    try {
+        await db.collection('memoriais').doc(id).delete();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Memorial Rejeitado!',
+            text: 'Notificação enviada e o registro do polo foi excluído do sistema.',
+            confirmButtonColor: '#10B981'
+        });
+    } catch (error) {
+        console.error("Erro ao excluir memorial:", error);
+    }
 }
 
 function logout() {
