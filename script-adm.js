@@ -51,7 +51,7 @@ function escutarMemoriaisEmTempoReal() {
 // =========================================================================
 
 function carregarMemoriais() {
-    const lista = listaMemoriaisGlobal;
+    const lista = listaMemoriaisGlobal || [];
     const tbody = document.getElementById('memorialsTableBody');
 
     let countPendente = 0, countAprovado = 0;
@@ -488,6 +488,21 @@ function montarEstruturaHTML(item) {
     return html;
 }
 
+// Helper seguro para adicionar imagem no jsPDF
+function adicionarImagemPDF(doc, imgData, x, y, w, h) {
+    if (!imgData) return;
+    try {
+        const format = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        doc.addImage(imgData, format, x, y, w, h);
+    } catch (e) {
+        try {
+            doc.addImage(imgData, 'JPEG', x, y, w, h);
+        } catch (err) {
+            console.warn('Erro ao inserir imagem no PDF:', err);
+        }
+    }
+}
+
 async function gerarPDFSemFalhas(item) {
     const { jsPDF } = window.jspdf;
 
@@ -532,15 +547,12 @@ async function gerarPDFSemFalhas(item) {
 
     const logoBase64 = await carregarImagemLogo('channels4_profile-removebg-preview.png');
 
+    // Capa
     doc.setFillColor(0, 85, 212);
     doc.rect(0, 0, 297, 210, 'F');
 
     if (logoBase64) {
-        try {
-            doc.addImage(logoBase64, 'PNG', 136, 35, 25, 25);
-        } catch (e) {
-            console.warn(e);
-        }
+        adicionarImagemPDF(doc, logoBase64, 136, 35, 25, 25);
     }
 
     doc.setTextColor(255, 255, 255);
@@ -564,6 +576,7 @@ async function gerarPDFSemFalhas(item) {
         doc.text(linhasEndereco, 148.5, 122 + offsetAltura, { align: 'center' });
     }
 
+    // Páginas dos Ambientes
     if (item.ambientes && item.ambientes.length > 0) {
         for (let i = 0; i < item.ambientes.length; i++) {
             const amb = item.ambientes[i];
@@ -587,16 +600,15 @@ async function gerarPDFSemFalhas(item) {
             const fotos = amb.fotos || [];
             
             if (fotos.length === 1) {
-                try { doc.addImage(fotos[0], 'JPEG', 15, 30, 140, 150); }
-                catch (e) { try { doc.addImage(fotos[0], 'PNG', 15, 30, 140, 150); } catch (err) {} }
+                adicionarImagemPDF(doc, fotos[0], 15, 30, 140, 150);
             } else if (fotos.length === 2) {
-                try { doc.addImage(fotos[0], 'JPEG', 15, 30, 140, 72); } catch (e) {}
-                try { doc.addImage(fotos[1], 'JPEG', 15, 105, 140, 75); } catch (e) {}
+                adicionarImagemPDF(doc, fotos[0], 15, 30, 140, 72);
+                adicionarImagemPDF(doc, fotos[1], 15, 105, 140, 75);
             } else if (fotos.length >= 3) {
-                try { doc.addImage(fotos[0], 'JPEG', 15, 30, 68, 72); } catch (e) {}
-                try { doc.addImage(fotos[1], 'JPEG', 87, 30, 68, 72); } catch (e) {}
-                if (fotos[2]) try { doc.addImage(fotos[2], 'JPEG', 15, 105, 68, 75); } catch (e) {}
-                if (fotos[3]) try { doc.addImage(fotos[3], 'JPEG', 87, 105, 68, 75); } catch (e) {}
+                adicionarImagemPDF(doc, fotos[0], 15, 30, 68, 72);
+                adicionarImagemPDF(doc, fotos[1], 87, 30, 68, 72);
+                if (fotos[2]) adicionarImagemPDF(doc, fotos[2], 15, 105, 68, 75);
+                if (fotos[3]) adicionarImagemPDF(doc, fotos[3], 87, 105, 68, 75);
             } else {
                 doc.setDrawColor(203, 213, 225);
                 doc.rect(15, 30, 140, 150, 'D');
