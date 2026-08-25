@@ -185,40 +185,19 @@
     <!-- CARREGAMENTO DO SCRIPT BASE -->
     <script src="script.js"></script>
 
-    <!-- GERENCIAMENTO DE E-MAIL E ACESSO À TELA DA PÁGINA -->
+    <!-- GERENCIAMENTO DE AUTENTICAÇÃO E ENVIO DE MEMORIAL -->
     <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            await obterOuPedirEmail();
+        document.addEventListener("DOMContentLoaded", () => {
+            verificarAutenticacao();
         });
 
-        async function obterOuPedirEmail() {
-            let email = localStorage.getItem('emailUsuarioPolo');
+        // Garante que o usuário acessou via tela de login
+        function verificarAutenticacao() {
+            const email = localStorage.getItem('emailUsuarioPolo');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-            if (email && emailRegex.test(email)) {
-                return email;
-            }
-
-            const { value: emailInserido } = await Swal.fire({
-                title: 'Identificação do Polo',
-                text: 'Informe seu e-mail para acompanhar as notificações do memorial:',
-                input: 'email',
-                inputPlaceholder: 'exemplo@unifecaf.com.br',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                confirmButtonText: 'Acessar Formulário',
-                confirmButtonColor: '#0E77CC',
-                inputValidator: (value) => {
-                    if (!value || !emailRegex.test(value)) {
-                        return 'Por favor, insira um e-mail válido para continuar!';
-                    }
-                }
-            });
-
-            if (emailInserido) {
-                email = emailInserido.trim().toLowerCase();
-                localStorage.setItem('emailUsuarioPolo', email);
-                return email;
+            if (!email || !emailRegex.test(email)) {
+                window.location.href = 'login.html';
             }
         }
 
@@ -227,7 +206,13 @@
                 event.preventDefault();
             }
 
-            const emailUsuarioPolo = await obterOuPedirEmail();
+            const emailUsuarioPolo = localStorage.getItem('emailUsuarioPolo');
+            
+            if (!emailUsuarioPolo) {
+                window.location.href = 'login.html';
+                return;
+            }
+
             const dados = typeof getDadosCapa === 'function' ? getDadosCapa() : {
                 polo: document.getElementById('poloName')?.value || '',
                 endereco: document.getElementById('poloAddress')?.value || '',
