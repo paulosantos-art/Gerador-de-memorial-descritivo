@@ -366,7 +366,7 @@ function analisarMemorial(id) {
 
             if (motivo) {
                 await notificarPoloPorEmail(item.email || item.emailContato, 'Rejeitado', item.polo, motivo);
-                excluirMemorial(id);
+                await excluirMemorial(id);
             }
         }
     });
@@ -673,16 +673,28 @@ async function alterarStatus(id, novoStatus) {
 
 async function excluirMemorial(id) {
     try {
+        // 1. Apaga o registro do Firestore
         await db.collection('memoriais').doc(id).delete();
         
+        // 2. Filtra e remove o item da lista global em memória
+        listaMemoriaisGlobal = listaMemoriaisGlobal.filter(item => String(item.id) !== String(id));
+        
+        // 3. Renderiza novamente a tabela e recalcula contadores sem recarregar a página
+        carregarMemoriais();
+
         Swal.fire({
             icon: 'success',
             title: 'Memorial Rejeitado!',
-            text: 'Notificação enviada e o registro do polo foi excluído do sistema.',
+            text: 'Notificação enviada e o registro do polo foi removido do painel.',
             confirmButtonColor: '#10B981'
         });
     } catch (error) {
         console.error("Erro ao excluir memorial:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro ao remover',
+            text: 'Ocorreu um problema ao tentar excluir o registro do banco de dados.'
+        });
     }
 }
 
